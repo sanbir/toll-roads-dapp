@@ -75,12 +75,15 @@ contract TollBoothOperator is TollBoothOperatorI, Pausable, DepositHolder, Route
         public
         payable
         returns (bool success) {
-        require(isPaused());
+        require(!isPaused());
         require(isTollBooth(entryBooth));
         uint vehicleType = RegulatorI(getRegulator()).getVehicleType(msg.sender);
         require(vehicleType != 0);
         uint vehicleMultiplier = getMultiplier(vehicleType);
-        
+        uint deposit = getDeposit();
+        require(deposit * multiplier < msg.value);
+        LogRoadEntered(msg.sender, entryBooth, exitSecretHashed, deposit);
+        return true;
     }
 
     /**
@@ -98,7 +101,9 @@ contract TollBoothOperator is TollBoothOperatorI, Pausable, DepositHolder, Route
         returns(
             address vehicle,
             address entryBooth,
-            uint depositedWeis);
+            uint depositedWeis) {
+        return ();
+    }
 
     /**
      * Event emitted when a vehicle exits a road system.
@@ -214,13 +219,14 @@ contract TollBoothOperator is TollBoothOperatorI, Pausable, DepositHolder, Route
      *       - It should behave as if there had been no pending payment, apart from the higher gas consumed.
      *     - It should be possible to call it even when the contract is in the `true` paused state.
      * Emits LogRoadExited if applicable.
+     */
     function setRoutePrice(
             address entryBooth,
             address exitBooth,
             uint priceWeis)
         public
         returns(bool success);
-     */
+     
 
 
 }
