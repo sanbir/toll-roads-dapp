@@ -1,8 +1,14 @@
 pragma solidity ^0.4.13;
 
-import "./interfaces/TollBoothOperatorI.sol"; 
+import "./interfaces/TollBoothOperatorI.sol";
+import "./Pausable.sol";
+import "./DepositHolder.sol";
+import "./RoutePriceHolder.sol";
+import "./MultiplierHolder.sol";
+import "./Regulated.sol";
+import "./interfaces/RegulatorI.sol";
 
-contract TollBoothOperator is TollBoothOperatorI, Pausable {
+contract TollBoothOperator is TollBoothOperatorI, Pausable, DepositHolder, RoutePriceHolder, MultiplierHolder, Regulated {
 
     /*
      * You need to create:
@@ -16,7 +22,11 @@ contract TollBoothOperator is TollBoothOperatorI, Pausable {
      *         - one `address` parameter, the initial regulator, which cannot be 0.
      */
 
-    function TollBoothOperator()
+    function TollBoothOperator(bool initialPausedState, uint initialDeposit, address initialRegulator) 
+        Pausable(initialPausedState)
+        DepositHolder(initialDeposit)
+        Regulated(initialRegulator) {
+    }
      
 
     /**
@@ -27,7 +37,9 @@ contract TollBoothOperator is TollBoothOperatorI, Pausable {
     function hashSecret(bytes32 secret)
         constant
         public
-        returns(bytes32 hashed);
+        returns(bytes32 hashed) {
+        return keccak256(secret);
+    }
 
     /**
      * Event emitted when a vehicle made the appropriate deposit to enter the road system.
@@ -62,7 +74,14 @@ contract TollBoothOperator is TollBoothOperatorI, Pausable {
             bytes32 exitSecretHashed)
         public
         payable
-        returns (bool success);
+        returns (bool success) {
+        require(isPaused());
+        require(isTollBooth(entryBooth));
+        uint vehicleType = RegulatorI(getRegulator()).getVehicleType(msg.sender);
+        require(vehicleType != 0);
+        uint vehicleMultiplier = getMultiplier(vehicleType);
+        
+    }
 
     /**
      * @param exitSecretHashed The hashed secret used by the vehicle when entering the road.

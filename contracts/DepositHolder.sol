@@ -13,6 +13,11 @@ contract DepositHolder is DepositHolderI, Owned {
 
     uint currentDepositWeis; 
 
+    function DepositHolder(uint initialDeposit) {
+        require(initialDeposit != 0);
+        currentDepositWeis = initialDeposit;
+    }
+
     /**
      * Called by the owner of the DepositHolder.
      *     It should roll back if the caller is not the owner of the contract.

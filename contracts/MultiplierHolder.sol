@@ -9,16 +9,6 @@ import "./Owned.sol"
 contract MultiplierHolder is MultiplierHolderI, Owned {
 
     mapping(uint => uint) multipliers;
-    /**
-     * Event emitted when a new multiplier has been set.
-     * @param sender The account that ran the action.
-     * @param vehicleType The type of vehicle for which the multiplier was set.
-     * @param multiplier The actual multiplier set.
-     */
-    event LogMultiplierSet(
-        address indexed sender,
-        uint indexed vehicleType,
-        uint multiplier);
 
     /**
      * Called by the owner of the TollBoothOperator.
@@ -36,7 +26,11 @@ contract MultiplierHolder is MultiplierHolderI, Owned {
             uint multiplier)
         public
         returns(bool success) {
-
+        require(vehicleType != 0);
+        require(multipliers[vehicleType] == 0);
+        multipliers[vehicleType] = multiplier;
+        LogMultiplierSet(msg.sender, vehicleType, multiplier);
+        return true;
     }
 
     /**
@@ -48,7 +42,9 @@ contract MultiplierHolder is MultiplierHolderI, Owned {
     function getMultiplier(uint vehicleType)
         constant
         public
-        returns(uint multiplier);
+        returns(uint multiplier) {
+        return multipliers[vehicleType];
+    }
 
         
 }
