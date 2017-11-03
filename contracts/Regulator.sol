@@ -1,10 +1,16 @@
 pragma solidity ^0.4.13;
 
 import "./interfaces/RegulatorI.sol"; 
+import "./TollBoothOperator.sol";
 
-contract Regulator is RegulatorI {
-
-	address owner;
+    /*
+     * You need to create:
+     *
+     * - a contract named `Regulator` that:
+     *     - is `OwnedI` and `RegulatorI`.
+     *     - has a constructor that takes no parameter.
+     */ 
+contract Regulator is RegulatorI, Owned {
 
     /**
      * 0: not a vehicle, absence of a vehicle
@@ -15,22 +21,7 @@ contract Regulator is RegulatorI {
      *   3: lorry
      */
      mapping(address => uint) public registeredVehicles;
-
-     function Regulator() {
-     	owner = msg.sender;
-     }
-
-    /**
-     * Event emitted when a new vehicle has been registered with its type.
-     * @param sender The account that ran the action.
-     * @param vehicle The address of the vehicle that is registered.
-     * @param vehicleType The VehicleType that the vehicle was registered as.
-     */
-    event LogVehicleTypeSet(
-        address indexed sender,
-        address indexed vehicle,
-        uint indexed vehicleType);
-
+     mapping(address => bool) public registredOperators;
     /**
      * Called by the owner of the regulator to register a new vehicle with its VehicleType.
      *     It should roll back if the caller is not the owner of the contract.
@@ -44,11 +35,11 @@ contract Regulator is RegulatorI {
      * Emits LogVehicleTypeSet
      */
     function setVehicleType(address vehicle, uint vehicleType)
+        fromOwner()
+        notZeroAddress(vehicle)
         public
-        returns(bool success) {
-
-        require(msg.sender == owner);
-        require(vehicle != 0x);
+        returns(bool success) 
+    {
         require(registeredVehicles[vehicle] != vehicleType);
 
         registeredVehicles[vehicle] = vehicleType;
@@ -64,20 +55,10 @@ contract Regulator is RegulatorI {
     function getVehicleType(address vehicle)
         constant
         public
-        returns(uint vehicleType);
+        returns(uint vehicleType) {
 
-    /**
-     * Event emitted when a new TollBoothOperator has been created and registered.
-     * @param sender The account that ran the action.
-     * @param newOperator The newly created TollBoothOperator contract.
-     * @param owner The rightful owner of the TollBoothOperator.
-     * @param depositWeis The initial deposit amount set in the TollBoothOperator.
-     */
-    event LogTollBoothOperatorCreated(
-        address indexed sender,
-        address indexed newOperator,
-        address indexed owner,
-        uint depositWeis);
+        return registeredVehicles[vehicle];
+    }
 
     /**
      * Called by the owner of the regulator to deploy a new TollBoothOperator onto the network.
@@ -92,17 +73,15 @@ contract Regulator is RegulatorI {
     function createNewOperator(
             address owner,
             uint deposit)
+        fromOwner()
         public
-        returns(TollBoothOperatorI newOperator);
-
-    /**
-     * Event emitted when a TollBoothOperator has been removed from the list of approved operators.
-     * @param sender The account that ran the action.
-     * @param operator The removed TollBoothOperator.
-     */
-    event LogTollBoothOperatorRemoved(
-        address indexed sender,
-        address indexed operator);
+        returns(TollBoothOperatorI newOperator) {
+        require(this.owner != owner);
+        address newOperator = new TollBoothOperator(true, deposit, owner);
+        registredOperators[newOperator] = true;
+        LogTollBoothOperatorCreated(msg.sender, newOperator, owner, deposit);
+        return newOperator;
+    }
 
     /**
      * Called by the owner of the regulator to remove a previously deployed TollBoothOperator from
@@ -114,8 +93,14 @@ contract Regulator is RegulatorI {
      * Emits LogTollBoothOperatorRemoved.
      */
     function removeOperator(address operator)
+        fromOwner()
         public
-        returns(bool success);
+        returns(bool success) {
+        require(registredOperators[operator]);
+        registredOperators[operator] = false;
+        LogTollBoothOperatorRemoved(msg.sender, operator);
+        return true;
+    }
 
     /**
      * @param operator The address of the TollBoothOperator to test.
@@ -124,13 +109,8 @@ contract Regulator is RegulatorI {
     function isOperator(address operator)
         constant
         public
-        returns(bool indeed);
+        returns(bool indeed) {
+        return registredOperators[operator]; 
+    }
 
-    /*
-     * You need to create:
-     *
-     * - a contract named `Regulator` that:
-     *     - is `OwnedI` and `RegulatorI`.
-     *     - has a constructor that takes no parameter.
-     */        
 }

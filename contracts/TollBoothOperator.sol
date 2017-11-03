@@ -2,7 +2,22 @@ pragma solidity ^0.4.13;
 
 import "./interfaces/TollBoothOperatorI.sol"; 
 
-contract TollBoothOperator is TollBoothOperatorI {
+contract TollBoothOperator is TollBoothOperatorI, Pausable {
+
+    /*
+     * You need to create:
+     *
+     * - a contract named `TollBoothOperator` that:
+     *     - is `OwnedI`, `PausableI`, `DepositHolderI`, `TollBoothHolderI`,
+     *         `MultiplierHolderI`, `RoutePriceHolderI`, `RegulatedI` and `TollBoothOperatorI`.
+     *     - has a constructor that takes:
+     *         - one `bool` parameter, the initial paused state.
+     *         - one `uint` parameter, the initial deposit wei value, which cannot be 0.
+     *         - one `address` parameter, the initial regulator, which cannot be 0.
+     */
+
+    function TollBoothOperator()
+     
 
     /**
      * This provides a single source of truth for the encoding algorithm.
@@ -188,15 +203,5 @@ contract TollBoothOperator is TollBoothOperatorI {
         returns(bool success);
      */
 
-    /*
-     * You need to create:
-     *
-     * - a contract named `TollBoothOperator` that:
-     *     - is `OwnedI`, `PausableI`, `DepositHolderI`, `TollBoothHolderI`,
-     *         `MultiplierHolderI`, `RoutePriceHolderI`, `RegulatedI` and `TollBoothOperatorI`.
-     *     - has a constructor that takes:
-     *         - one `bool` parameter, the initial paused state.
-     *         - one `uint` parameter, the initial deposit wei value, which cannot be 0.
-     *         - one `address` parameter, the initial regulator, which cannot be 0.
-     */
+
 }
