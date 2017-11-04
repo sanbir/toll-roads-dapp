@@ -10,6 +10,14 @@ import "./interfaces/RegulatorI.sol";
 
 contract TollBoothOperator is TollBoothOperatorI, Pausable, DepositHolder, RoutePriceHolder, MultiplierHolder, Regulated {
 
+	struct VehicleEntry {
+		address vehicle;
+        address entryBooth;
+        uint depositedWeis;
+	}
+
+	mapping(bytes32 => VehicleEntry) vehicleEntries;
+
     /*
      * You need to create:
      *
@@ -42,19 +50,6 @@ contract TollBoothOperator is TollBoothOperatorI, Pausable, DepositHolder, Route
     }
 
     /**
-     * Event emitted when a vehicle made the appropriate deposit to enter the road system.
-     * @param vehicle The address of the vehicle that entered the road system.
-     * @param entryBooth The declared entry booth by which the vehicle will enter the system.
-     * @param exitSecretHashed A hashed secret that when solved allows the operator to pay itself.
-     * @param depositedWeis The amount that was deposited as part of the entry.
-     */
-    event LogRoadEntered(
-        address indexed vehicle,
-        address indexed entryBooth,
-        bytes32 indexed exitSecretHashed,
-        uint depositedWeis);
-
-    /**
      * Called by the vehicle entering a road system.
      * Off-chain, the entry toll booth will open its gate up successful deposit and confirmation
      * of the vehicle identity.
@@ -72,17 +67,20 @@ contract TollBoothOperator is TollBoothOperatorI, Pausable, DepositHolder, Route
     function enterRoad(
             address entryBooth,
             bytes32 exitSecretHashed)
+    	whenNotPaused()
         public
         payable
         returns (bool success) {
-        require(!isPaused());
         require(isTollBooth(entryBooth));
         uint vehicleType = RegulatorI(getRegulator()).getVehicleType(msg.sender);
         require(vehicleType != 0);
         uint vehicleMultiplier = getMultiplier(vehicleType);
         uint deposit = getDeposit();
         require(deposit * multiplier < msg.value);
-        LogRoadEntered(msg.sender, entryBooth, exitSecretHashed, deposit);
+        vehicleEntries[exitSecretHashed] = VehicleEntry({vehicle: msg.sender,
+						        					  entryBooth: entryBooth,
+						        				   depositedWeis: msg.value});
+        LogRoadEntered(msg.sender, entryBooth, exitSecretHashed, msg.value);
         return true;
     }
 
@@ -102,7 +100,7 @@ contract TollBoothOperator is TollBoothOperatorI, Pausable, DepositHolder, Route
             address vehicle,
             address entryBooth,
             uint depositedWeis) {
-        return ();
+        return vehicleEntries[exitSecretHashed];
     }
 
     /**
@@ -143,8 +141,16 @@ contract TollBoothOperator is TollBoothOperatorI, Pausable, DepositHolder, Route
      *   2: pending oracle -> emits LogPendingPayment
      */
     function reportExitRoad(bytes32 exitSecretClear)
+    	whenNotPaused()
+    	whenTollBooth(msg.sender)
         public
-        returns (uint status);
+        returns (uint status) {
+
+        var exitSecretHashed = hashSecret(exitSecretClear);
+        require(vehicleEntries[exitSecretHashed].depositedWeis != 0);
+        require(msg.sender != vehicleEntries[exitSecretHashed].entryBooth);
+
+    }
 
     /**
      * @param entryBooth the entry booth that has pending payments.
