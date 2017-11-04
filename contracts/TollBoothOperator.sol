@@ -72,11 +72,9 @@ contract TollBoothOperator is TollBoothOperatorI, Pausable, DepositHolder, Route
         payable
         returns (bool success) {
         require(isTollBooth(entryBooth));
-        uint vehicleType = RegulatorI(getRegulator()).getVehicleType(msg.sender);
-        require(vehicleType != 0);
-        uint vehicleMultiplier = getMultiplier(vehicleType);
+        uint vehicleMultiplier = getMultiplierByVehicle(msg.sender);
         uint deposit = getDeposit();
-        require(deposit * multiplier < msg.value);
+        require(msg.value >= deposit * vehicleMultiplier);
         vehicleEntries[exitSecretHashed] = VehicleEntry({vehicle: msg.sender,
 						        					  entryBooth: entryBooth,
 						        				   depositedWeis: msg.value});
@@ -150,15 +148,40 @@ contract TollBoothOperator is TollBoothOperatorI, Pausable, DepositHolder, Route
         var vehicleEntry = vehicleEntries[exitSecretHashed];
         require(vehicleEntry.depositedWeis != 0);
         require(msg.sender != vehicleEntries[exitSecretHashed].entryBooth);
-        var routePrice = getRoutePrice(vehicleEntry.entryBooth, msg.sender);
-        if(routePrice == 0) {
+        uint baseRoutePrice = getRoutePrice(vehicleEntry.entryBooth, msg.sender);
+        if(baseRoutePrice == 0) {
             pendingPayments[vehicleEntry.entryBooth][msg.sender].push(exitSecretHashed);
             LogPendingPayment(exitSecretHashed, vehicleEntry.entryBooth, msg.sender);
             return 2;
         } else {
-            LogRoadExited(msg.sender, exitSecretHashed, 0, 0);
+        	refund(exitSecretHashed, baseRoutePrice);
             return 1;
         }
+    }
+
+    function refund(bytes32 exitSecretHashed, uint baseRoutePrice) {
+    	address vehicle = vehicleEntries[exitSecretHashed].vehicle;
+    	address vehicleMultiplier = getMultiplierByVehicle(vehicle);
+    	
+    	uint finalFee = baseRoutePrice * vehicleMultiplier;
+    	uint refundWeis = vehicleEntries[exitSecretHashed].depositedWeis - finalFee;
+    	vehicle.transfer(refundWeis);
+    	vehicleEntries[exitSecretHashed] = VehicleEntry({vehicle: 0x,
+						        					  entryBooth: 0x,
+						        				   depositedWeis: 0}});
+        LogRoadExited(msg.sender, exitSecretHashed, finalFee, refundWeis);
+    }
+
+    function getMultiplierByVehicle(address vehicle)
+    	constant
+    	private
+    	returns(uint vehicleMultiplier) {
+
+    	var regulator = RegulatorI(getRegulator());
+    	uint vehicleType = regulator.getVehicleType(vehicle);
+    	require(vehicleType != 0);
+    	uint vehicleMultiplier = getMultiplier(vehicleType);
+    	return vehicleMultiplier;
     }
 
     /**
@@ -171,7 +194,7 @@ contract TollBoothOperator is TollBoothOperatorI, Pausable, DepositHolder, Route
         constant
         public
         returns (uint count) {
-        return pendingPayments[vehicleEntry.entryBooth][msg.sender].count();
+        return pendingPayments[entryBooth][exitBooth].count();
     }
 
     /**
@@ -190,8 +213,34 @@ contract TollBoothOperator is TollBoothOperatorI, Pausable, DepositHolder, Route
             address entryBooth,
             address exitBooth,
             uint count)
+    	whenNotPaused()
+    	whenTollBooth(entryBooth)
+    	whenTollBooth(exitBooth)
         public
-        returns (bool success);
+        returns (bool success) {
+
+        require(getPendingPaymentCount(entryBooth, exitBooth) >= count);
+        require(count != 0);
+
+        var hashedExitSecrets = pendingPayments[entryBooth][exitBooth];
+        uint baseRoutePrice = getRoutePrice(entryBooth, exitBooth);
+        for(var i = 0; i < count; i++) {
+        	refund(hashedExitSecrets[i], baseRoutePrice);
+        	delete hashedExitSecrets[i];
+        }
+
+        uint i = 0;
+        while (i < count) {
+
+        	++i;
+        }
+        
+        return true;
+    }
+
+    // WARNING!!!!
+    // ДИКАЯ ДИЧЬ, ПЕРЕПИСАТЬ!!!!!!!!!!!!!!!!!!!!!!!!
+    unit zeroIndex;
 
     /**
      * @return The amount that has been collected through successful payments. This is the current
