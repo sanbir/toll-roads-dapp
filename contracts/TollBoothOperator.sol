@@ -17,7 +17,7 @@ contract TollBoothOperator is TollBoothOperatorI, Pausable, DepositHolder, Route
 	}
 
 	mapping(bytes32 => VehicleEntry) vehicleEntries;
-
+    mapping(address => mapping(address => bytes32[])) pendingPayments;
     /*
      * You need to create:
      *
@@ -147,9 +147,18 @@ contract TollBoothOperator is TollBoothOperatorI, Pausable, DepositHolder, Route
         returns (uint status) {
 
         var exitSecretHashed = hashSecret(exitSecretClear);
-        require(vehicleEntries[exitSecretHashed].depositedWeis != 0);
+        var vehicleEntry = vehicleEntries[exitSecretHashed];
+        require(vehicleEntry.depositedWeis != 0);
         require(msg.sender != vehicleEntries[exitSecretHashed].entryBooth);
-
+        var routePrice = getRoutePrice(vehicleEntry.entryBooth, msg.sender);
+        if(routePrice == 0) {
+            pendingPayments[vehicleEntry.entryBooth][msg.sender].push(exitSecretHashed);
+            LogPendingPayment(exitSecretHashed, vehicleEntry.entryBooth, msg.sender);
+            return 2;
+        } else {
+            LogRoadExited(msg.sender, exitSecretHashed, 0, 0);
+            return 1;
+        }
     }
 
     /**
@@ -161,7 +170,9 @@ contract TollBoothOperator is TollBoothOperatorI, Pausable, DepositHolder, Route
     function getPendingPaymentCount(address entryBooth, address exitBooth)
         constant
         public
-        returns (uint count);
+        returns (uint count) {
+        return pendingPayments[vehicleEntry.entryBooth][msg.sender].count();
+    }
 
     /**
      * Can be called by anyone. In case more than 1 payment was pending when the oracle gave a price.
