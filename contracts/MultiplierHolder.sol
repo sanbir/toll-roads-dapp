@@ -1,6 +1,6 @@
 pragma solidity ^0.4.13;
 import "./interfaces/MultiplierHolderI.sol";
-import "./Owned.sol"
+import "./Owned.sol";
 /*
  * - a contract named `MultiplierHolder` that:
  *     - is `OwnedI` and `MultiplierHolderI`.
