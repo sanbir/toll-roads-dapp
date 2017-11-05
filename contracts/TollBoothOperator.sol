@@ -16,8 +16,14 @@ contract TollBoothOperator is TollBoothOperatorI, Pausable, DepositHolder, Route
         uint depositedWeis;
 	}
 
+	struct PendingSecrets {
+		uint zeroIndex;
+		bytes32[] hashedExitSecrets;
+	}
+
+	uint collectedFees;
 	mapping(bytes32 => VehicleEntry) vehicleEntries;
-    mapping(address => mapping(address => bytes32[])) pendingPayments;
+    mapping(address => mapping(address => PendingSecrets)) pendingPayments;
     /*
      * You need to create:
      *
@@ -101,31 +107,6 @@ contract TollBoothOperator is TollBoothOperatorI, Pausable, DepositHolder, Route
         return vehicleEntries[exitSecretHashed];
     }
 
-    /**
-     * Event emitted when a vehicle exits a road system.
-     * @param exitBooth The toll booth that saw the vehicle exit.
-     * @param exitSecretHashed The hash of the secret given by the vehicle as it
-     *     passed by the exit booth.
-     * @param finalFee The toll fee taken from the deposit.
-     * @param refundWeis The amount refunded to the vehicle, i.e. deposit - fee.
-     */
-    event LogRoadExited(
-        address indexed exitBooth,
-        bytes32 indexed exitSecretHashed,
-        uint finalFee,
-        uint refundWeis);
-
-    /**
-     * Event emitted when a vehicle used a route that has no known fee.
-     * It is a signal for the oracle to provide a price for the pair.
-     * @param exitSecretHashed The hashed secret that was defined at the time of entry.
-     * @param entryBooth The address of the booth the vehicle entered at.
-     * @param exitBooth The address of the booth the vehicle exited at.
-     */
-    event LogPendingPayment(
-        bytes32 indexed exitSecretHashed,
-        address indexed entryBooth,
-        address indexed exitBooth);
 
     /**
      * Called by the exit booth.
@@ -150,26 +131,39 @@ contract TollBoothOperator is TollBoothOperatorI, Pausable, DepositHolder, Route
         require(msg.sender != vehicleEntries[exitSecretHashed].entryBooth);
         uint baseRoutePrice = getRoutePrice(vehicleEntry.entryBooth, msg.sender);
         if(baseRoutePrice == 0) {
-            pendingPayments[vehicleEntry.entryBooth][msg.sender].push(exitSecretHashed);
+            pendingPayments[vehicleEntry.entryBooth][msg.sender].hashedExitSecrets.push(exitSecretHashed);
             LogPendingPayment(exitSecretHashed, vehicleEntry.entryBooth, msg.sender);
             return 2;
         } else {
-        	refund(exitSecretHashed, baseRoutePrice);
+        	require(refund(exitSecretHashed, baseRoutePrice, msg.sender));
             return 1;
         }
     }
 
-    function refund(bytes32 exitSecretHashed, uint baseRoutePrice) {
+    function refund(bytes32 exitSecretHashed, uint baseRoutePrice, address exitBooth) 
+    	private returns(bool success) {
+
     	address vehicle = vehicleEntries[exitSecretHashed].vehicle;
-    	address vehicleMultiplier = getMultiplierByVehicle(vehicle);
-    	
-    	uint finalFee = baseRoutePrice * vehicleMultiplier;
-    	uint refundWeis = vehicleEntries[exitSecretHashed].depositedWeis - finalFee;
-    	vehicle.transfer(refundWeis);
-    	vehicleEntries[exitSecretHashed] = VehicleEntry({vehicle: 0x,
-						        					  entryBooth: 0x,
-						        				   depositedWeis: 0}});
-        LogRoadExited(msg.sender, exitSecretHashed, finalFee, refundWeis);
+    	uint vehicleMultiplier = getMultiplierByVehicle(vehicle);
+    	if (vehicleMultiplier == 0) {
+    		success = false;
+    	} else {
+	    	uint finalFee = baseRoutePrice * vehicleMultiplier;
+	    	collectedFees += finalFee;
+	    	uint refundWeis = vehicleEntries[exitSecretHashed].depositedWeis - finalFee;
+	    	bool sent = vehicle.send(refundWeis);
+	    	if (sent) {
+		    	vehicleEntries[exitSecretHashed] = VehicleEntry({vehicle: 0x,
+								        					  entryBooth: 0x,
+								        				   depositedWeis: 0}});
+		        LogRoadExited(exitBooth, exitSecretHashed, finalFee, refundWeis);
+		        success = true;
+	    	} else {
+	    		collectedFees -= finalFee;
+	    		success = false;
+	    	}
+	    }
+        return success;
     }
 
     function getMultiplierByVehicle(address vehicle)
@@ -179,8 +173,11 @@ contract TollBoothOperator is TollBoothOperatorI, Pausable, DepositHolder, Route
 
     	var regulator = RegulatorI(getRegulator());
     	uint vehicleType = regulator.getVehicleType(vehicle);
-    	require(vehicleType != 0);
-    	uint vehicleMultiplier = getMultiplier(vehicleType);
+    	if (vehicleType == 0) {
+    		vehicleMultiplier = 0;
+		} else {
+			vehicleMultiplier = getMultiplier(vehicleType);
+		}
     	return vehicleMultiplier;
     }
 
@@ -194,7 +191,9 @@ contract TollBoothOperator is TollBoothOperatorI, Pausable, DepositHolder, Route
         constant
         public
         returns (uint count) {
-        return pendingPayments[entryBooth][exitBooth].count();
+
+        var routePendingPayments = pendingPayments[entryBooth][exitBooth];
+        return routePendingPayments.hashedExitSecrets.count() - routePendingPayments.zeroIndex;
     }
 
     /**
@@ -222,25 +221,16 @@ contract TollBoothOperator is TollBoothOperatorI, Pausable, DepositHolder, Route
         require(getPendingPaymentCount(entryBooth, exitBooth) >= count);
         require(count != 0);
 
-        var hashedExitSecrets = pendingPayments[entryBooth][exitBooth];
+        PendingSecrets storage routePendingPayments = pendingPayments[entryBooth][exitBooth];
         uint baseRoutePrice = getRoutePrice(entryBooth, exitBooth);
-        for(var i = 0; i < count; i++) {
-        	refund(hashedExitSecrets[i], baseRoutePrice);
-        	delete hashedExitSecrets[i];
-        }
 
-        uint i = 0;
-        while (i < count) {
-
-        	++i;
+        for(var i = routePendingPayments.zeroIndex; i < count + routePendingPayments.zeroIndex; i++) {
+        	require(refund(routePendingPayments.hashedExitSecrets[i], baseRoutePrice, exitBooth));
         }
+        routePendingPayments.zeroIndex += count;
         
         return true;
     }
-
-    // WARNING!!!!
-    // ДИКАЯ ДИЧЬ, ПЕРЕПИСАТЬ!!!!!!!!!!!!!!!!!!!!!!!!
-    unit zeroIndex;
 
     /**
      * @return The amount that has been collected through successful payments. This is the current
@@ -250,16 +240,10 @@ contract TollBoothOperator is TollBoothOperatorI, Pausable, DepositHolder, Route
     function getCollectedFeesAmount()
         constant
         public
-        returns(uint amount);
+        returns(uint amount) {
 
-    /**
-     * Event emitted when the owner collects the fees.
-     * @param owner The account that sent the request.
-     * @param amount The amount collected.
-     */
-    event LogFeesCollected(
-        address indexed owner,
-        uint amount);
+        return collectedFees;
+    }
 
     /**
      * Called by the owner of the contract to withdraw all collected fees (not deposits) to date.
@@ -270,8 +254,16 @@ contract TollBoothOperator is TollBoothOperatorI, Pausable, DepositHolder, Route
      * Emits LogFeesCollected.
      */
     function withdrawCollectedFees()
+    	fromOwner()
         public
-        returns(bool success);
+        returns(bool success) {
+
+        require(collectedFees > 0);
+        owner.transfer(collectedFees);
+        collectedFees = 0;
+        LogFeesCollected(owner, collectedFees);
+        return true;
+    }
 
     /**
      * This function overrides the eponymous function of `RoutePriceHolderI`, to which it adds the following
@@ -291,8 +283,21 @@ contract TollBoothOperator is TollBoothOperatorI, Pausable, DepositHolder, Route
             address exitBooth,
             uint priceWeis)
         public
-        returns(bool success);
-     
+        returns(bool success) {
+
+        super.setRoutePrice(entryBooth, exitBooth, priceWeis);
+
+        PendingSecrets storage routePendingPayments = pendingPayments[entryBooth][exitBooth];
+        if (routePendingPayments.hashedExitSecrets.count() > routePendingPayments.zeroIndex) {
+	        uint baseRoutePrice = getRoutePrice(entryBooth, exitBooth);
+	        bool refunded = refund(routePendingPayments.hashedExitSecrets[routePendingPayments.zeroIndex], baseRoutePrice, exitBooth);
+	        if (refunded) {
+	        	routePendingPayments.zeroIndex++;
+	        }
+    	}
+
+    	return true;
+    } 
 
 
 }
