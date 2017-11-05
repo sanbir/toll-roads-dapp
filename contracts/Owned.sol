@@ -3,9 +3,9 @@ pragma solidity ^0.4.13;
 import "./interfaces/OwnedI.sol";
 
 contract Owned is OwnedI{
-	adderess owner;
+	address owner;
 
-	public Onwed() {
+	function Onwed() {
 		owner = msg.sender;
 	}
 
@@ -34,7 +34,7 @@ contract Owned is OwnedI{
     }
 
     modifier notZeroAddress(address addr) {
-    	require(addr != 0x);
+    	require(addr != 0x0);
     	_;
     }
 }

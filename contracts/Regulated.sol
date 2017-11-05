@@ -32,7 +32,7 @@ contract Regulated is RegulatedI {
         public
         returns(bool success) {
 
-        require(addr != 0x);
+        require(addr != 0x0);
         require(msg.sender == currentRegulator);
         require(newRegulator != currentRegulator);
         LogRegulatorSet(currentRegulator, newRegulator);

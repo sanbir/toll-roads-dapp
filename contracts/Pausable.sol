@@ -7,7 +7,7 @@ contract Pausable is PausableI, Owned {
 
 	bool state;
 
-	public Pausable(bool initialState) {
+	function Pausable(bool initialState) {
 		state = initialState; 
 	}
 
@@ -19,9 +19,7 @@ contract Pausable is PausableI, Owned {
      * @return Whether the action was successful.
      * Emits LogPausedSet.
      */
-    function setPaused(bool newState) returns(bool success) 
-    	fromOwner()
-    {
+    function setPaused(bool newState) fromOwner() returns(bool success) {
     	require(state != newState);
     	LogPausedSet(msg.sender, state, newState);
     	state = newState;
