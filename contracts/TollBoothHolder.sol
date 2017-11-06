@@ -7,6 +7,10 @@ contract TollBoothHolder is TollBoothHolderI, Owned {
 
     mapping (address => bool) tollBooths;
 
+    function TollBoothHolder() {
+
+    }
+
     /**
      * Called by the owner of the TollBoothOperator.
      *     It should roll back if the caller is not the owner of the contract.
@@ -63,10 +67,6 @@ contract TollBoothHolder is TollBoothHolderI, Owned {
         return true;
     }
 
-    function dummyFunction() {
-      
-    }
-
     modifier whenTollBooth(address tollBooth) {
         require(isTollBooth(tollBooth));
         _;
@@ -74,6 +74,11 @@ contract TollBoothHolder is TollBoothHolderI, Owned {
 
     modifier whenNotTollBooth(address tollBooth) {
         require(!isTollBooth(tollBooth));
+        _;
+    }
+
+    modifier whenTollBooths(address tollBooth0, address tollBooth1) {
+        require(isTollBooth(tollBooth0) && isTollBooth(tollBooth1));
         _;
     }
 

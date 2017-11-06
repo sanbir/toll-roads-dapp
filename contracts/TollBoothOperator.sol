@@ -18,7 +18,7 @@ contract TollBoothOperator is TollBoothOperatorI, Pausable, DepositHolder, Route
 
 	struct PendingSecrets {
 		uint zeroIndex;
-		bytes32[] hashedExitSecrets;
+	    bytes32[] hashedExitSecrets;
 	}
 
 	uint collectedFees;
@@ -215,8 +215,7 @@ contract TollBoothOperator is TollBoothOperatorI, Pausable, DepositHolder, Route
             address exitBooth,
             uint count)
     	whenNotPaused()
-    	whenTollBooth(entryBooth)
-    	whenTollBooth(exitBooth)
+        whenTollBooths(entryBooth, exitBooth)
         public
         returns (bool success) {
 

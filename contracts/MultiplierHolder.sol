@@ -24,10 +24,11 @@ contract MultiplierHolder is MultiplierHolderI, Owned {
     function setMultiplier(
             uint vehicleType,
             uint multiplier)
+        fromOwner()
         public
         returns(bool success) {
         require(vehicleType != 0);
-        require(multipliers[vehicleType] == 0);
+        require(multipliers[vehicleType] != multiplier);
         multipliers[vehicleType] = multiplier;
         LogMultiplierSet(msg.sender, vehicleType, multiplier);
         return true;
