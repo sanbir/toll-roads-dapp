@@ -23,7 +23,8 @@ contract TollBoothOperator is TollBoothOperatorI, Pausable, DepositHolder, Route
 
 	uint collectedFees;
 	mapping(bytes32 => VehicleEntry) vehicleEntries;
-    mapping(address => mapping(address => PendingSecrets)) public pendingPayments;
+    mapping(address => mapping(address => PendingSecrets)) pendingPayments;
+
     /*
      * You need to create:
      *
@@ -70,6 +71,7 @@ contract TollBoothOperator is TollBoothOperatorI, Pausable, DepositHolder, Route
      * @return Whether the action was successful.
      * Emits LogRoadEntered.
      */
+
     function enterRoad(
             address entryBooth,
             bytes32 exitSecretHashed)
@@ -82,9 +84,11 @@ contract TollBoothOperator is TollBoothOperatorI, Pausable, DepositHolder, Route
         uint vehicleMultiplier = getMultiplierByVehicle(msg.sender);
         uint deposit = getDeposit();
         require(msg.value >= deposit * vehicleMultiplier);
-        vehicleEntries[exitSecretHashed] = VehicleEntry({vehicle: msg.sender,
-						        					  entryBooth: entryBooth,
-						        				   depositedWeis: msg.value});
+
+        vehicleEntries[exitSecretHashed].vehicle = msg.sender;
+        vehicleEntries[exitSecretHashed].entryBooth = entryBooth;
+        vehicleEntries[exitSecretHashed].depositedWeis = msg.value;
+        
         LogRoadEntered(msg.sender, entryBooth, exitSecretHashed, msg.value);
         return true;
     }
@@ -155,9 +159,9 @@ contract TollBoothOperator is TollBoothOperatorI, Pausable, DepositHolder, Route
 	    	bool sent = vehicle.send(refundWeis);
 	    	if (sent) {
 		        LogRoadExited(exitBooth, exitSecretHashed, finalFee, refundWeis);
-                vehicleEntries[exitSecretHashed] = VehicleEntry({vehicle: address(0),
-                                                              entryBooth: address(0),
-                                                           depositedWeis: 0});
+                // vehicleEntries[exitSecretHashed] = VehicleEntry({vehicle: address(0),
+                //                                               entryBooth: address(0),
+                //                                            depositedWeis: 0});
 		        success = true;
 	    	} else {
 	    		collectedFees -= finalFee;
