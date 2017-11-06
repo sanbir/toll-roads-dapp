@@ -38,4 +38,5 @@ contract Owned is OwnedI{
     	require(addr != 0x0);
     	_;
     }
+
 }
