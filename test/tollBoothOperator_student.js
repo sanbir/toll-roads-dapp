@@ -87,7 +87,6 @@ contract('TollBoothOperator', function(accounts) {
                 .then(tx => operator.setMultiplier(vehicleType1, multiplier1, { from: owner1 }))
                 .then(tx => {
                     console.log("!!!return operator.setRoutePrice(booth0, booth1");
-                    console.log(operator.pendingPayments(0)(1).hashedExitSecrets().length);
 
                     return operator.setRoutePrice(booth0, booth1, price01, { from: owner1 });
                 })

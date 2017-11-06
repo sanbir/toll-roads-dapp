@@ -294,7 +294,7 @@ contract TollBoothOperator is TollBoothOperatorI, Pausable, DepositHolder, Route
 	        uint baseRoutePrice = getRoutePrice(entryBooth, exitBooth);
 	        bool refunded = refund(routePendingPayments.hashedExitSecrets[routePendingPayments.zeroIndex], baseRoutePrice, exitBooth);
 	        if (refunded) {
-	        	routePendingPayments.zeroIndex++;
+	         	routePendingPayments.zeroIndex++;
 	        }
     	}
 
