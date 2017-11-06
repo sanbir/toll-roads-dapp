@@ -154,10 +154,10 @@ contract TollBoothOperator is TollBoothOperatorI, Pausable, DepositHolder, Route
 	    	uint refundWeis = vehicleEntries[exitSecretHashed].depositedWeis - finalFee;
 	    	bool sent = vehicle.send(refundWeis);
 	    	if (sent) {
-		    	vehicleEntries[exitSecretHashed] = VehicleEntry({vehicle: 0x0,
-								        					  entryBooth: 0x0,
-								        				   depositedWeis: 0});
 		        LogRoadExited(exitBooth, exitSecretHashed, finalFee, refundWeis);
+                vehicleEntries[exitSecretHashed] = VehicleEntry({vehicle: address(0),
+                                                              entryBooth: address(0),
+                                                           depositedWeis: 0});
 		        success = true;
 	    	} else {
 	    		collectedFees -= finalFee;
