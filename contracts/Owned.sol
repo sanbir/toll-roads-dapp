@@ -2,10 +2,10 @@ pragma solidity ^0.4.13;
 
 import "./interfaces/OwnedI.sol";
 
-contract Owned is OwnedI{
-	address owner;
+contract Owned is OwnedI {
+    address public owner;
 
-	function Onwed() {
+	function Owned() public {
 		owner = msg.sender;
 	}
 
@@ -18,8 +18,9 @@ contract Owned is OwnedI{
      * @return Whether the action was successful.
      * Emits LogOwnerSet.
      */
-    function setOwner(address newOwner) fromOwner() notZeroAddress(newOwner) returns(bool) {
+    function setOwner(address newOwner) fromOwner() returns(bool) {
     	require(newOwner != owner);
+        require(newOwner != 0x0);
     	LogOwnerSet(owner, newOwner);
     	owner = newOwner;
     	return true;
@@ -34,9 +35,6 @@ contract Owned is OwnedI{
      	_;
     }
 
-    modifier notZeroAddress(address addr) {
-    	require(addr != 0x0);
-    	_;
-    }
+
 
 }

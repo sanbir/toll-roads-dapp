@@ -261,9 +261,9 @@ contract TollBoothOperator is TollBoothOperatorI, Pausable, DepositHolder, Route
         returns(bool success) {
 
         require(collectedFees > 0);
-        owner.transfer(collectedFees);
+        getOwner().transfer(collectedFees);
         collectedFees = 0;
-        LogFeesCollected(owner, collectedFees);
+        LogFeesCollected(getOwner(), collectedFees);
         return true;
     }
 

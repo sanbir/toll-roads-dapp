@@ -7,7 +7,7 @@ contract Pausable is PausableI, Owned {
 
 	bool state;
 
-	function Pausable(bool initialState) {
+	function Pausable(bool initialState) Owned() {
 		state = initialState; 
 	}
 

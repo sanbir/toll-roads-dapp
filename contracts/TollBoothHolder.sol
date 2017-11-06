@@ -20,11 +20,10 @@ contract TollBoothHolder is TollBoothHolderI, Owned {
      */
     function addTollBooth(address tollBooth)
         fromOwner()
-        notZeroAddress(tollBooth)
         whenNotTollBooth(tollBooth)
         public
         returns(bool success) {
-
+        require(tollBooth != 0x0);
         tollBooths[tollBooth] = true;
         LogTollBoothAdded(msg.sender, tollBooth);
         return true;
@@ -55,14 +54,17 @@ contract TollBoothHolder is TollBoothHolderI, Owned {
      */
     function removeTollBooth(address tollBooth)
         fromOwner()
-        notZeroAddress(tollBooth)
         whenTollBooth(tollBooth)
         public
         returns(bool success) {
-
+        require(tollBooth != 0x0);
         tollBooths[tollBooth] = false;
         LogTollBoothRemoved(msg.sender, tollBooth);
         return true;
+    }
+
+    function dummyFunction() {
+      
     }
 
     modifier whenTollBooth(address tollBooth) {

@@ -36,10 +36,10 @@ contract Regulator is RegulatorI, Owned {
      */
     function setVehicleType(address vehicle, uint vehicleType)
         fromOwner()
-        notZeroAddress(vehicle)
         public
         returns(bool success) 
     {
+        require(vehicle != 0x0);
         require(registeredVehicles[vehicle] != vehicleType);
 
         registeredVehicles[vehicle] = vehicleType;

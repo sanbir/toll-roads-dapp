@@ -34,10 +34,10 @@ contract RoutePriceHolder is RoutePriceHolderI, TollBoothHolder {
             address exitBooth,
             uint priceWeis)
         fromOwner()
-        notZeroAddress(entryBooth)
-        notZeroAddress(exitBooth)
         public
         returns(bool success) {
+            require(entryBooth != 0x0);
+            require(exitBooth != 0x0);
             require(tollBooths[entryBooth] && tollBooths[exitBooth]);
             require(tollBooths[entryBooth] != tollBooths[exitBooth]);
             require(routePrices[entryBooth][exitBooth] != priceWeis);
