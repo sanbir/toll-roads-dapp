@@ -14,7 +14,7 @@ contract Regulated is RegulatedI {
 	address currentRegulator;
 
 	function Regulated(address initialRegulator) {
-		require(initialRegulator != 0);
+		require(initialRegulator != address(0));
 		currentRegulator = initialRegulator;
 	}
 
@@ -32,7 +32,7 @@ contract Regulated is RegulatedI {
         public
         returns(bool success) {
 
-        require(newRegulator != 0x0);
+        require(newRegulator != address(0));
         require(msg.sender == currentRegulator);
         require(newRegulator != currentRegulator);
         LogRegulatorSet(currentRegulator, newRegulator);

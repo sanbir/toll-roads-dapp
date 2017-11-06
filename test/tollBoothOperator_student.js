@@ -69,15 +69,32 @@ contract('TollBoothOperator', function(accounts) {
                 .then(instance => regulator = instance)
                 .then(() => regulator.setVehicleType(vehicle0, vehicleType0, { from: owner0 }))
                 .then(tx => regulator.setVehicleType(vehicle1, vehicleType1, { from: owner0 }))
-                .then(tx => regulator.createNewOperator(owner1, deposit0, { from: owner0 }))
-                .then(tx => operator = TollBoothOperator.at(tx.logs[1].args.newOperator))
+                .then(tx => {
+                    console.log("!!!!return regulator.createNewOperator(owner1");
+                    return regulator.createNewOperator(owner1, deposit0, { from: owner0 });
+                })
+                .then(tx => {
+                    console.log("!!!!return operator = TollBoothOperator.at(tx.logs[1]");
+                    return operator = TollBoothOperator.at(tx.logs[1].args.newOperator);
+                })
                 .then(() => operator.addTollBooth(booth0, { from: owner1 }))
                 .then(tx => operator.addTollBooth(booth1, { from: owner1 }))
                 .then(tx => operator.addTollBooth(booth2, { from: owner1 }))
-                .then(tx => operator.setMultiplier(vehicleType0, multiplier0, { from: owner1 }))
+                .then(tx => { 
+                    console.log("!!!!return operator.setMultiplier(vehicleType0, multiplier0,");
+                    return operator.setMultiplier(vehicleType0, multiplier0, { from: owner1 });
+                })
                 .then(tx => operator.setMultiplier(vehicleType1, multiplier1, { from: owner1 }))
-                .then(tx => operator.setRoutePrice(booth0, booth1, price01, { from: owner1 }))
-                .then(tx => operator.setPaused(false, { from: owner1 }))
+                .then(tx => {
+                    console.log("!!!return operator.setRoutePrice(booth0, booth1");
+                    console.log(operator.pendingPayments(0)(1).hashedExitSecrets().length);
+
+                    return operator.setRoutePrice(booth0, booth1, price01, { from: owner1 });
+                })
+                .then(tx => {
+                    console.log("!!!!operator.setPaused(false,");
+                    return operator.setPaused(false, { from: owner1 });
+                })
                 .then(tx => operator.hashSecret(secret0))
                 .then(hash => hashed0 = hash)
                 .then(tx => operator.hashSecret(secret1))

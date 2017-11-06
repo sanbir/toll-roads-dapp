@@ -36,10 +36,10 @@ contract RoutePriceHolder is RoutePriceHolderI, TollBoothHolder {
         fromOwner()
         public
         returns(bool success) {
-            require(entryBooth != 0x0);
-            require(exitBooth != 0x0);
+            require(entryBooth != address(0));
+            require(exitBooth != address(0));
             require(tollBooths[entryBooth] && tollBooths[exitBooth]);
-            require(tollBooths[entryBooth] != tollBooths[exitBooth]);
+            require(entryBooth != exitBooth);
             require(routePrices[entryBooth][exitBooth] != priceWeis);
             routePrices[entryBooth][exitBooth] = priceWeis;
             LogRoutePriceSet(msg.sender, entryBooth, exitBooth, priceWeis);

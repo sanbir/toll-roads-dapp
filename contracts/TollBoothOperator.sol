@@ -23,7 +23,7 @@ contract TollBoothOperator is TollBoothOperatorI, Pausable, DepositHolder, Route
 
 	uint collectedFees;
 	mapping(bytes32 => VehicleEntry) vehicleEntries;
-    mapping(address => mapping(address => PendingSecrets)) pendingPayments;
+    mapping(address => mapping(address => PendingSecrets)) public pendingPayments;
     /*
      * You need to create:
      *
@@ -78,6 +78,7 @@ contract TollBoothOperator is TollBoothOperatorI, Pausable, DepositHolder, Route
         payable
         returns (bool success) {
         require(isTollBooth(entryBooth));
+
         uint vehicleMultiplier = getMultiplierByVehicle(msg.sender);
         uint deposit = getDeposit();
         require(msg.value >= deposit * vehicleMultiplier);
