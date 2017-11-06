@@ -104,7 +104,7 @@ contract TollBoothOperator is TollBoothOperatorI, Pausable, DepositHolder, Route
             address vehicle,
             address entryBooth,
             uint depositedWeis) {
-        return vehicleEntries[exitSecretHashed];
+        return (vehicleEntries[exitSecretHashed].vehicle, vehicleEntries[exitSecretHashed].entryBooth, vehicleEntries[exitSecretHashed].depositedWeis);
     }
 
 
@@ -140,7 +140,7 @@ contract TollBoothOperator is TollBoothOperatorI, Pausable, DepositHolder, Route
         }
     }
 
-    function refund(bytes32 exitSecretHashed, uint baseRoutePrice, address exitBooth) 
+    function refund(bytes32 exitSecretHashed, uint baseRoutePrice, address exitBooth)
     	private returns(bool success) {
 
     	address vehicle = vehicleEntries[exitSecretHashed].vehicle;
@@ -153,18 +153,20 @@ contract TollBoothOperator is TollBoothOperatorI, Pausable, DepositHolder, Route
 	    	uint refundWeis = vehicleEntries[exitSecretHashed].depositedWeis - finalFee;
 	    	bool sent = vehicle.send(refundWeis);
 	    	if (sent) {
-		    	vehicleEntries[exitSecretHashed] = VehicleEntry({vehicle: 0x,
-								        					  entryBooth: 0x,
-								        				   depositedWeis: 0}});
+		    	vehicleEntries[exitSecretHashed] = VehicleEntry({vehicle: 0x0,
+								        					  entryBooth: 0x0,
+								        				   depositedWeis: 0});
 		        LogRoadExited(exitBooth, exitSecretHashed, finalFee, refundWeis);
 		        success = true;
 	    	} else {
 	    		collectedFees -= finalFee;
 	    		success = false;
 	    	}
+
 	    }
         return success;
     }
+
 
     function getMultiplierByVehicle(address vehicle)
     	constant
@@ -193,7 +195,7 @@ contract TollBoothOperator is TollBoothOperatorI, Pausable, DepositHolder, Route
         returns (uint count) {
 
         var routePendingPayments = pendingPayments[entryBooth][exitBooth];
-        return routePendingPayments.hashedExitSecrets.count() - routePendingPayments.zeroIndex;
+        return routePendingPayments.hashedExitSecrets.length - routePendingPayments.zeroIndex;
     }
 
     /**
@@ -288,7 +290,7 @@ contract TollBoothOperator is TollBoothOperatorI, Pausable, DepositHolder, Route
         super.setRoutePrice(entryBooth, exitBooth, priceWeis);
 
         PendingSecrets storage routePendingPayments = pendingPayments[entryBooth][exitBooth];
-        if (routePendingPayments.hashedExitSecrets.count() > routePendingPayments.zeroIndex) {
+        if (routePendingPayments.hashedExitSecrets.length > routePendingPayments.zeroIndex) {
 	        uint baseRoutePrice = getRoutePrice(entryBooth, exitBooth);
 	        bool refunded = refund(routePendingPayments.hashedExitSecrets[routePendingPayments.zeroIndex], baseRoutePrice, exitBooth);
 	        if (refunded) {
