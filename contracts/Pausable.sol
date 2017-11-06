@@ -19,10 +19,11 @@ contract Pausable is PausableI, Owned {
      * @return Whether the action was successful.
      * Emits LogPausedSet.
      */
-    function setPaused(bool newState) fromOwner() returns(bool success) {
+    function setPaused(bool newState) fromOwner() returns(bool) {
     	require(state != newState);
-    	LogPausedSet(msg.sender, state, newState);
+    	LogPausedSet(msg.sender, newState);
     	state = newState;
+    	return true;
     }
 
     /**

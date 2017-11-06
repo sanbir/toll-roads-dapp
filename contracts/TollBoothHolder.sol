@@ -19,7 +19,7 @@ contract TollBoothHolder is TollBoothHolderI, Owned {
      * Emits LogTollBoothAdded
      */
     function addTollBooth(address tollBooth)
-        onlyOwner()
+        fromOwner()
         notZeroAddress(tollBooth)
         whenNotTollBooth(tollBooth)
         public
@@ -54,7 +54,7 @@ contract TollBoothHolder is TollBoothHolderI, Owned {
      * Emits LogTollBoothRemoved
      */
     function removeTollBooth(address tollBooth)
-        onlyOwner()
+        fromOwner()
         notZeroAddress(tollBooth)
         whenTollBooth(tollBooth)
         public

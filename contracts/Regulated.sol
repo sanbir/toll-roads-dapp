@@ -1,7 +1,7 @@
 pragma solidity ^0.4.13;
 
 import "./interfaces/RegulatedI.sol";
-
+import "./interfaces/RegulatorI.sol";
 /*
  * You need to create:
  *
@@ -32,7 +32,7 @@ contract Regulated is RegulatedI {
         public
         returns(bool success) {
 
-        require(addr != 0x0);
+        require(newRegulator != 0x0);
         require(msg.sender == currentRegulator);
         require(newRegulator != currentRegulator);
         LogRegulatorSet(currentRegulator, newRegulator);
@@ -47,7 +47,7 @@ contract Regulated is RegulatedI {
         constant
         public
         returns(RegulatorI regulator) {
-        return currentRegulator;
+        return RegulatorI(currentRegulator);
     }
 
 }

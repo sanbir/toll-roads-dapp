@@ -42,7 +42,7 @@ contract RoutePriceHolder is RoutePriceHolderI, TollBoothHolder {
             require(tollBooths[entryBooth] != tollBooths[exitBooth]);
             require(routePrices[entryBooth][exitBooth] != priceWeis);
             routePrices[entryBooth][exitBooth] = priceWeis;
-            LogPriceSet(msg.sender, entryBooth, exitBooth, priceWeis);
+            LogRoutePriceSet(msg.sender, entryBooth, exitBooth, priceWeis);
             return true;
         }
 
