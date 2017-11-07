@@ -135,12 +135,13 @@ contract TollBoothOperator is TollBoothOperatorI, Pausable, DepositHolder, Route
         require(vehicleEntry.depositedWeis != 0);
         require(msg.sender != vehicleEntries[exitSecretHashed].entryBooth);
         uint baseRoutePrice = getRoutePrice(vehicleEntry.entryBooth, msg.sender);
+        
         if(baseRoutePrice == 0) {
             pendingPayments[vehicleEntry.entryBooth][msg.sender].hashedExitSecrets.push(exitSecretHashed);
             LogPendingPayment(exitSecretHashed, vehicleEntry.entryBooth, msg.sender);
             return 2;
         } else {
-        	require(refund(exitSecretHashed, baseRoutePrice, msg.sender));
+            require(refund(exitSecretHashed, baseRoutePrice, msg.sender));
             return 1;
         }
     }
@@ -159,9 +160,8 @@ contract TollBoothOperator is TollBoothOperatorI, Pausable, DepositHolder, Route
 	    	bool sent = vehicle.send(refundWeis);
 	    	if (sent) {
 		        LogRoadExited(exitBooth, exitSecretHashed, finalFee, refundWeis);
-                // vehicleEntries[exitSecretHashed] = VehicleEntry({vehicle: address(0),
-                //                                               entryBooth: address(0),
-                //                                            depositedWeis: 0});
+                
+                vehicleEntries[exitSecretHashed].depositedWeis = 0;
 		        success = true;
 	    	} else {
 	    		collectedFees -= finalFee;
@@ -284,26 +284,26 @@ contract TollBoothOperator is TollBoothOperatorI, Pausable, DepositHolder, Route
      *     - It should be possible to call it even when the contract is in the `true` paused state.
      * Emits LogRoadExited if applicable.
      */
-    function setRoutePrice(
-            address entryBooth,
-            address exitBooth,
-            uint priceWeis)
-        public
-        returns(bool success) {
+    // function setRoutePrice(
+    //         address entryBooth,
+    //         address exitBooth,
+    //         uint priceWeis)
+    //     public
+    //     returns(bool success) {
 
-        super.setRoutePrice(entryBooth, exitBooth, priceWeis);
+    //     super.setRoutePrice(entryBooth, exitBooth, priceWeis);
 
-        PendingSecrets storage routePendingPayments = pendingPayments[entryBooth][exitBooth];
-        if (routePendingPayments.hashedExitSecrets.length > routePendingPayments.zeroIndex) {
-	        uint baseRoutePrice = getRoutePrice(entryBooth, exitBooth);
-	        bool refunded = refund(routePendingPayments.hashedExitSecrets[routePendingPayments.zeroIndex], baseRoutePrice, exitBooth);
-	        if (refunded) {
-	         	routePendingPayments.zeroIndex++;
-	        }
-    	}
+    //     PendingSecrets storage routePendingPayments = pendingPayments[entryBooth][exitBooth];
+    //     if (routePendingPayments.hashedExitSecrets.length > routePendingPayments.zeroIndex) {
+	   //      uint baseRoutePrice = getRoutePrice(entryBooth, exitBooth);
+	   //      bool refunded = refund(routePendingPayments.hashedExitSecrets[routePendingPayments.zeroIndex], baseRoutePrice, exitBooth);
+	   //      if (refunded) {
+	   //       	routePendingPayments.zeroIndex++;
+	   //      }
+    // 	}
 
-    	return true;
-    } 
+    // 	return true;
+    // } 
 
 
 }
