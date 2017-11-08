@@ -135,7 +135,7 @@ contract TollBoothOperator is TollBoothOperatorI, Pausable, DepositHolder, Route
         require(vehicleEntry.depositedWeis != 0);
         require(msg.sender != vehicleEntries[exitSecretHashed].entryBooth);
         uint baseRoutePrice = getRoutePrice(vehicleEntry.entryBooth, msg.sender);
-        
+
         if(baseRoutePrice == 0) {
             pendingPayments[vehicleEntry.entryBooth][msg.sender].hashedExitSecrets.push(exitSecretHashed);
             LogPendingPayment(exitSecretHashed, vehicleEntry.entryBooth, msg.sender);
@@ -155,6 +155,10 @@ contract TollBoothOperator is TollBoothOperatorI, Pausable, DepositHolder, Route
     		success = false;
     	} else {
 	    	uint finalFee = baseRoutePrice * vehicleMultiplier;
+            if (finalFee > vehicleEntries[exitSecretHashed].depositedWeis) {
+                finalFee = vehicleEntries[exitSecretHashed].depositedWeis;
+            }
+            
 	    	collectedFees += finalFee;
 	    	uint refundWeis = vehicleEntries[exitSecretHashed].depositedWeis - finalFee;
 	    	bool sent = vehicle.send(refundWeis);
