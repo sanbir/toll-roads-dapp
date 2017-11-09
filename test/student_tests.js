@@ -43,25 +43,6 @@ contract('TollBoothOperator', function(accounts) {
             .then(balance => assert.isAtLeast(web3.fromWei(balance).toNumber(), 10));
     });
 
-    describe("deploy", function() {
-
-        it("should not be possible to deploy a TollBoothOperator with deposit 0 - 1", function() {
-            return expectedExceptionPromise(
-                () => TollBoothOperator.new(false, 0, owner0, { from: owner1, gas: 3000000 }),
-                3000000);
-        });
-
-        it("should be possible to deploy a TollBoothOperator with parameters - 1", function() {
-            return TollBoothOperator.new(false, deposit0, owner0, { from: owner1 })
-                .then(instance => operator = instance)
-                .then(() => operator.isPaused())
-                .then(paused => assert.isFalse(paused))
-                .then(() => operator.getDeposit())
-                .then(deposit => assert.strictEqual(deposit.toNumber(), deposit0));
-        });
-
-    });
-
     describe("Vehicle Operations", function() {
 
         beforeEach("should deploy regulator and operator", function() {
@@ -187,6 +168,47 @@ contract('TollBoothOperator', function(accounts) {
 
                 });
 
+        });
+
+       //       * Scenario 5:
+       // * `vehicle1` enters at `booth1` and deposits (say 14) more than the required amount (say 10).
+       // * `vehicle1` exits at `booth2`, which route price happens to be unknown.
+       // * the operator's owner updates the route price, which happens to be less than the deposited amount (say 11).
+       // * `vehicle1` gets refunded the difference (so 3).
+       it("should do Scenario 5", () => {
+            
+            const deposited = ( deposit0 + 15 ) * multiplier0; 
+            const newPrice = deposit0 - 42;
+            const refund = deposited - newPrice * multiplier0;
+            const finalFee = newPrice * multiplier0;
+
+            console.log("enterRoad");
+            return operator.enterRoad(booth0, hashed0, { from: vehicle0, value: deposited })
+                .then(() => {
+                   console.log("setRoutePrice");
+                   return operator.setRoutePrice(booth0, booth1, 0, { from: owner1 });
+                })
+                .then(() => {
+                    console.log("reportExitRoad");
+                    return operator.reportExitRoad(secret0, { from: booth1 });
+                    const logPendingPayment = tx.logs[0];
+                    assert.strictEqual(logPendingPayment.event, "LogPendingPayment", "#3");
+                })
+                .then(() => {
+                   console.log("setRoutePrice");
+                   return operator.setRoutePrice(booth0, booth1, newPrice, { from: owner1 });
+                })
+                .then(tx => {
+                    assert.strictEqual(tx.logs.length, 2, "#2");
+                    const logPriceSet = tx.logs[0];
+                    assert.strictEqual(logPriceSet.event, "LogRoutePriceSet", "#3");
+                    const logExited = tx.logs[1];
+                    assert.strictEqual(logExited.event, "LogRoadExited", "#3");
+                    assert.strictEqual(logExited.args.exitBooth, booth1, "#4");
+                    assert.strictEqual(logExited.args.exitSecretHashed, hashed0, "#5");
+                    assert.strictEqual(logExited.args.finalFee.toNumber(), finalFee, "#6");
+                    assert.strictEqual(logExited.args.refundWeis.toNumber(), refund, "#7");
+                });
         });
     });
 
