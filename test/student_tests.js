@@ -210,6 +210,55 @@ contract('TollBoothOperator', function(accounts) {
                     assert.strictEqual(logExited.args.refundWeis.toNumber(), refund, "#7");
                 });
         });
+
+        // vehicle1 enters at booth1 and deposits more (say 14) than the required amount (say 10).
+        // vehicle1 exits at booth2, which route price happens to be unknown.
+        // vehicle2 enters at booth1 and deposits the exact required amount (so 10).
+        // vehicle2 exits at booth2, which route price happens to be unknown.
+        // the operator's owner updates the route price, which happens to be less than the required deposit (so 6).
+        // vehicle1 gets refunded the difference (so 8).
+        // someone (anyone) calls to clear one pending payment.
+        // vehicle2 gets refunded the difference (so 4).
+        it("should do Scenario 6", () => {
+            
+            const depositedV0 = ( deposit0 + 15 ) * multiplier0;
+            const depositedV1 = deposit0 * multiplier1; 
+            const newPrice = deposit0 - 42;
+            const finalFeeV0 = newPrice * multiplier0;
+            const finalFeeV1 = newPrice * multiplier1;
+            const refundV0 = depositedV0 - finalFeeV0;
+            const refundV1 = depositedV1 - finalFeeV1;
+
+
+            console.log("setRoutePrice"); 
+            return operator.setRoutePrice(booth0, booth1, 0, { from: owner1 })
+                .then(() => operator.enterRoad(booth0, hashed0, { from: vehicle0, value: depositedV0 }))
+                .then(() => operator.reportExitRoad(secret0, { from: booth1 }))
+                .then(() => operator.enterRoad(booth0, hashed1, { from: vehicle1, value: depositedV1 }))
+                .then(() => operator.reportExitRoad(secret1, { from: booth1 }))
+                .then(() => operator.setRoutePrice(booth0, booth1, newPrice, { from: owner1 }))
+                .then(tx => {
+                    assert.strictEqual(tx.logs.length, 2, "#2");
+                    const logPriceSet = tx.logs[0];
+                    assert.strictEqual(logPriceSet.event, "LogRoutePriceSet", "#3");
+                    const logExited = tx.logs[1];
+                    assert.strictEqual(logExited.event, "LogRoadExited", "#3");
+                    assert.strictEqual(logExited.args.exitBooth, booth1, "#4");
+                    assert.strictEqual(logExited.args.exitSecretHashed, hashed0, "#5");
+                    assert.strictEqual(logExited.args.finalFee.toNumber(), finalFeeV0, "#6");
+                    assert.strictEqual(logExited.args.refundWeis.toNumber(), refundV0, "#7");
+                })
+                .then(() => operator.clearSomePendingPayments(booth0, booth1, 1, { from: vehicle1 }))
+                .then(tx => {
+                    assert.strictEqual(tx.logs.length, 1, "#2");
+                    const logExited = tx.logs[0];
+                    assert.strictEqual(logExited.event, "LogRoadExited", "#3");
+                    assert.strictEqual(logExited.args.exitBooth, booth1, "#4");
+                    assert.strictEqual(logExited.args.exitSecretHashed, hashed1, "#5");
+                    assert.strictEqual(logExited.args.finalFee.toNumber(), finalFeeV1, "#6");
+                    assert.strictEqual(logExited.args.refundWeis.toNumber(), refundV1, "#7");
+                });
+        });
     });
 
 
