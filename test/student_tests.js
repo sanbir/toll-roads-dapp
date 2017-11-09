@@ -135,6 +135,33 @@ contract('TollBoothOperator', function(accounts) {
 
         });
 
+          // * `vehicle1` enters at `booth1` and deposits required amount (say 10).
+          // * `vehicle1` exits at `booth2`, which route price happens to be less than the deposit amount (say 6).
+          // * `vehicle1` gets refunded the difference (so 4).
+        it("should do Scenario 3", () => {
+            
+            const refund = 15; 
+            const depositLeft = price01 + refund;
+             
+
+            return operator.setRoutePrice(booth0, booth1, price01, { from: owner1 })
+                .then(() => {
+                    return operator.enterRoad(booth0, hashed0, { from: vehicle0, value: depositLeft });
+                })
+                .then(() => operator.reportExitRoad(secret0, { from: booth1 }))
+                .then(tx => {
+
+                    assert.strictEqual(tx.logs.length, 1, "#2");
+                    const logExited = tx.logs[0];
+                    assert.strictEqual(logExited.event, "LogRoadExited", "#3");
+                    assert.strictEqual(logExited.args.exitBooth, booth1, "#4");
+                    assert.strictEqual(logExited.args.exitSecretHashed, hashed0, "#5");
+                    assert.strictEqual(logExited.args.finalFee.toNumber(), price01, "#6");
+                    assert.strictEqual(logExited.args.refundWeis.toNumber(), refund, "#7");
+                });
+        });
+
+
 
     });
 
