@@ -139,25 +139,32 @@ contract('TollBoothOperator', function(accounts) {
           // * `vehicle1` exits at `booth2`, which route price happens to be less than the deposit amount (say 6).
           // * `vehicle1` gets refunded the difference (so 4).
         it("should do Scenario 3", () => {
-            
             const refund = 15; 
-            const depositLeft = price01 + refund;
-             
-
-            return operator.setRoutePrice(booth0, booth1, price01, { from: owner1 })
+            const baseRoutePrice = deposit0;
+            const requiredPrice = baseRoutePrice * multiplier0; 
+            const newPrice01 = baseRoutePrice - refund;
+            
+            
+            return operator.setRoutePrice(booth0, booth1, baseRoutePrice, { from: owner1 })
                 .then(() => {
-                    return operator.enterRoad(booth0, hashed0, { from: vehicle0, value: depositLeft });
+                    console.log("enterRoad");
+                    return operator.enterRoad(booth0, hashed0, { from: vehicle0, value: requiredPrice })
+                }).then(() => {
+                    console.log("setRoutePrice", "newPrice01:", newPrice01, "deposit0:", deposit0, "requiredPrice:", requiredPrice);
+                    return operator.setRoutePrice(booth0, booth1, newPrice01, { from: owner1 })
                 })
-                .then(() => operator.reportExitRoad(secret0, { from: booth1 }))
+                .then(() => {
+                    console.log("reportExitRoad");
+                    return operator.reportExitRoad(secret0, { from: booth1 });
+                })
                 .then(tx => {
-
                     assert.strictEqual(tx.logs.length, 1, "#2");
                     const logExited = tx.logs[0];
                     assert.strictEqual(logExited.event, "LogRoadExited", "#3");
                     assert.strictEqual(logExited.args.exitBooth, booth1, "#4");
                     assert.strictEqual(logExited.args.exitSecretHashed, hashed0, "#5");
-                    assert.strictEqual(logExited.args.finalFee.toNumber(), price01, "#6");
-                    assert.strictEqual(logExited.args.refundWeis.toNumber(), refund, "#7");
+                    assert.strictEqual(logExited.args.finalFee.toNumber(), newPrice01 * multiplier0, "#6");
+                    assert.strictEqual(logExited.args.refundWeis.toNumber(), refund * multiplier0, "#7");
                 });
         });
 
