@@ -35,12 +35,9 @@ const RegistrationForm = ({user, onSave, onChange, saving, errors}) => {
       onChange={onChange}
       error={errors.confirmPassword}/>
 
-      <input
-        type="submit"
-        disabled={saving}
-        value={saving ? 'Saving...' : 'Save'}
+      <button
         className="btn btn-primary"
-        onClick={onSave}/>
+        onClick={onSave}></button>
     </form>
   );
 };
