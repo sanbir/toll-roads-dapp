@@ -10,6 +10,8 @@ contract MultiplierHolder is MultiplierHolderI, Owned {
 
     mapping(uint => uint) multipliers;
 
+    function MultiplierHolder() Owned() {}
+
     /**
      * Called by the owner of the TollBoothOperator.
      *   Can be used to update a value.

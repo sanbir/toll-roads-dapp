@@ -15,6 +15,8 @@ contract RoutePriceHolder is RoutePriceHolderI, TollBoothHolder {
 
     mapping(address => mapping(address => uint)) routePrices;
 
+    function RoutePriceHolder() TollBoothHolder() {}
+
     /**
      * Called by the owner of the RoutePriceHolder.
      *     It can be used to update the price of a route, including to zero.

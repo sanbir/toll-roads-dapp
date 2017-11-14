@@ -2,6 +2,7 @@ pragma solidity ^0.4.13;
 
 import "./interfaces/RegulatorI.sol"; 
 import "./TollBoothOperator.sol";
+import "./interfaces/TollBoothOperatorI.sol";
 
     /*
      * You need to create:
@@ -22,6 +23,7 @@ contract Regulator is RegulatorI, Owned {
      */
      mapping(address => uint) public registeredVehicles;
      mapping(address => bool) public registredOperators;
+
     /**
      * Called by the owner of the regulator to register a new vehicle with its VehicleType.
      *     It should roll back if the caller is not the owner of the contract.

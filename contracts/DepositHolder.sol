@@ -13,7 +13,7 @@ contract DepositHolder is DepositHolderI, Owned {
 
     uint currentDepositWeis; 
 
-    function DepositHolder(uint initialDeposit) {
+    function DepositHolder(uint initialDeposit) Owned() {
         require(initialDeposit != 0);
         currentDepositWeis = initialDeposit;
     }

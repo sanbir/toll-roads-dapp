@@ -37,12 +37,15 @@ contract TollBoothOperator is TollBoothOperatorI, Pausable, DepositHolder, Route
      *         - one `address` parameter, the initial regulator, which cannot be 0.
      */
 
-    function TollBoothOperator(bool initialPausedState, uint initialDeposit, address initialRegulator) 
-        Pausable(initialPausedState)
+    function TollBoothOperator(bool initialPausedState, uint initialDeposit, address initialRegulator)
+		Pausable(initialPausedState)
         DepositHolder(initialDeposit)
-        Regulated(initialRegulator) {
+        Regulated(initialRegulator)
+        RoutePriceHolder()
+        MultiplierHolder()
+    {
     }
-     
+
 
     /**
      * This provides a single source of truth for the encoding algorithm.
@@ -63,7 +66,7 @@ contract TollBoothOperator is TollBoothOperatorI, Pausable, DepositHolder, Route
      *     It should roll back when the contract is in the `true` paused state.
      *     It should roll back if `entryBooth` is not a tollBooth.
      *     It should roll back if less than deposit * multiplier was sent alongside.
-     *     It should be possible for a vehicle to enter "again" before it has exited from the 
+     *     It should be possible for a vehicle to enter "again" before it has exited from the
      *       previous entry.
      * @param entryBooth The declared entry booth by which the vehicle will enter the system.
      * @param exitSecretHashed A hashed secret that when solved allows the operator to pay itself.
@@ -88,7 +91,7 @@ contract TollBoothOperator is TollBoothOperatorI, Pausable, DepositHolder, Route
         vehicleEntries[exitSecretHashed].vehicle = msg.sender;
         vehicleEntries[exitSecretHashed].entryBooth = entryBooth;
         vehicleEntries[exitSecretHashed].depositedWeis = msg.value;
-        
+
         LogRoadEntered(msg.sender, entryBooth, exitSecretHashed, msg.value);
         return true;
     }
@@ -158,13 +161,13 @@ contract TollBoothOperator is TollBoothOperatorI, Pausable, DepositHolder, Route
             if (finalFee > vehicleEntries[exitSecretHashed].depositedWeis) {
                 finalFee = vehicleEntries[exitSecretHashed].depositedWeis;
             }
-            
+
 	    	collectedFees += finalFee;
 	    	uint refundWeis = vehicleEntries[exitSecretHashed].depositedWeis - finalFee;
 	    	bool sent = vehicle.send(refundWeis);
 	    	if (sent) {
 		        LogRoadExited(exitBooth, exitSecretHashed, finalFee, refundWeis);
-                
+
                 vehicleEntries[exitSecretHashed].depositedWeis = 0;
 		        success = true;
 	    	} else {
@@ -238,7 +241,7 @@ contract TollBoothOperator is TollBoothOperatorI, Pausable, DepositHolder, Route
         	require(refund(routePendingPayments.hashedExitSecrets[i], baseRoutePrice, exitBooth));
         }
         routePendingPayments.zeroIndex += count;
-        
+
         return true;
     }
 
@@ -307,7 +310,7 @@ contract TollBoothOperator is TollBoothOperatorI, Pausable, DepositHolder, Route
     	}
 
     	return true;
-    } 
+    }
 
 
 }

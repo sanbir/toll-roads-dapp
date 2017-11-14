@@ -7,7 +7,7 @@ contract TollBoothHolder is TollBoothHolderI, Owned {
 
     mapping (address => bool) tollBooths;
 
-    function TollBoothHolder() {
+    function TollBoothHolder() Owned() {
 
     }
 
