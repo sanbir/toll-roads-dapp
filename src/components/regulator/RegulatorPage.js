@@ -74,13 +74,13 @@ export class RegulatorPage extends React.Component {
             regulator.deployed().then((instance) => {
                 regulatorInstance = instance;
                 console.log(this.state);
-                return regulatorInstance.createNewOperator(this.state.operator.owner, this.state.operator.deposit, {from: accounts[0]})
+                return regulatorInstance.createNewOperator(this.state.operator.owner, this.state.operator.deposit, {from: accounts[0], gas: 3600000})
             })
                 //.catch(console.log)
                 .then(tx => {
-                    //const log = tx.logs[0];
+                    const log = tx.logs[0];
 
-                    return JSON.stringify(tx);//log.args;
+                    return JSON.stringify(log.args);
                 })
                 .then(alert);
 
