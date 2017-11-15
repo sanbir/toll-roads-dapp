@@ -20,7 +20,8 @@ export class RegulatorPage extends React.Component {
             },
             operator: {
                 owner: "",
-                deposit: ""
+                deposit: "",
+                deployedContractAddress: ""
             }
         };
 
@@ -62,9 +63,9 @@ export class RegulatorPage extends React.Component {
     }
 
     createNewOperator() {
-        const contract = require('truffle-contract')
-        const regulator = contract(RegulatorContract)
-        regulator.setProvider(this.web3.currentProvider)
+        const contract = require('truffle-contract');
+        const regulator = contract(RegulatorContract);
+        regulator.setProvider(this.web3.currentProvider);
 
 
         let regulatorInstance;
@@ -76,14 +77,10 @@ export class RegulatorPage extends React.Component {
                 console.log(this.state);
                 return regulatorInstance.createNewOperator(this.state.operator.owner, this.state.operator.deposit, {from: accounts[0], gas: 3600000})
             })
-                //.catch(console.log)
-                .then(tx => {
-                    const log = tx.logs[0];
-
-                    return JSON.stringify(log.args);
-                })
-                .then(alert);
-
+            .then(tx => {
+                this.state.operator.deployedContractAddress = tx.logs[1].args.newOperator;
+                this.setState(this.state.operator);
+            });
         })
     }
 
@@ -153,6 +150,13 @@ export class RegulatorPage extends React.Component {
                                 <button
                                     className="btn btn-primary"
                                     onClick={this.createNewOperator}>Create New Operator</button>
+
+                                <div style={{display: this.state.operator.deployedContractAddress ? 'block' : 'none'}}>
+                                    <label className="form-group">
+                                        Toll Booth Operator contract address: {this.state.operator.deployedContractAddress}
+                                    </label>
+                                </div>
+
                             </div>
                         </div>
                     </div>
