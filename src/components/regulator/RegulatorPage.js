@@ -21,7 +21,7 @@ export class RegulatorPage extends React.Component {
             operator: {
                 owner: "",
                 deposit: "",
-                deployedContractAddress: ""
+                deployedContractAddresses: []
             }
         };
 
@@ -33,10 +33,7 @@ export class RegulatorPage extends React.Component {
             console.log('Error finding web3.')
         });
 
-
     }
-
-
 
     setVehicleType() {
         const contract = require('truffle-contract')
@@ -78,8 +75,8 @@ export class RegulatorPage extends React.Component {
                 return regulatorInstance.createNewOperator(this.state.operator.owner, this.state.operator.deposit, {from: accounts[0], gas: 3600000})
             })
             .then(tx => {
-                this.state.operator.deployedContractAddress = tx.logs[1].args.newOperator;
-                this.setState(this.state.operator);
+                this.state.operator.deployedContractAddresses.push(tx.logs[1].args.newOperator);
+                this.setState(this.state.operator.deployedContractAddresses);
             });
         })
     }
@@ -150,13 +147,18 @@ export class RegulatorPage extends React.Component {
                                 <button
                                     className="btn btn-primary"
                                     onClick={this.createNewOperator}>Create New Operator</button>
+                            </div>
+                            <br/>
+                            <div style={{display: this.state.operator.deployedContractAddresses.length ? 'block' : 'none'}}>
+                                <label className="form-group">
+                                    Toll Booth Operator contract addresses
+                                </label>
 
-                                <div style={{display: this.state.operator.deployedContractAddress ? 'block' : 'none'}}>
-                                    <label className="form-group">
-                                        Toll Booth Operator contract address: {this.state.operator.deployedContractAddress}
-                                    </label>
-                                </div>
-
+                                <ul>
+                                    {this.state.operator.deployedContractAddresses.map((number) =>
+                                        <li>{number}</li>
+                                    )}
+                                </ul>
                             </div>
                         </div>
                     </div>
