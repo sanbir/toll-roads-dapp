@@ -13,6 +13,9 @@ export class TollBoothOperatorPage extends React.Component {
         this.setRoutePrice = this.setRoutePrice.bind(this);
         this.updateRoutePriceState = this.updateRoutePriceState.bind(this);
 
+        this.setMultiplier = this.setMultiplier.bind(this);
+        this.updateMultiplierState = this.updateMultiplierState.bind(this);
+
         this.state = {
             tollBooth: {
                 address: "",
@@ -23,6 +26,12 @@ export class TollBoothOperatorPage extends React.Component {
                 entryBooth: "",
                 exitBooth: "",
                 priceWeis: "",
+                operatorOwner: "",
+                operatorContract: ""
+            },
+            multiplierStruct: {
+                vehicleType: "",
+                multiplier: "",
                 operatorOwner: "",
                 operatorContract: ""
             }
@@ -82,6 +91,29 @@ export class TollBoothOperatorPage extends React.Component {
         })
     }
 
+    setMultiplier() {
+        const contract = require('truffle-contract');
+        const tollBoothOperator = contract(TollBoothOperatorContract);
+        tollBoothOperator.setProvider(this.web3.currentProvider);
+
+        let tollBoothOperatorInstance;
+
+        this.web3.eth.getAccounts((error, accounts) => {
+            tollBoothOperator.at(this.state.multiplierStruct.operatorContract).then((instance) => {
+                tollBoothOperatorInstance = instance;
+                return tollBoothOperatorInstance.setMultiplier(
+                    this.state.multiplierStruct.vehicleType,
+                    this.state.multiplierStruct.multiplier,
+                    {from: this.state.multiplierStruct.operatorOwner});
+            })
+            .then(tx => {
+                const log = tx.logs[0];
+                return JSON.stringify(log.args);
+            })
+            .then(alert);
+        })
+    }
+
     updateTollBoothState(event) {
         const field = event.target.name;
         let tollBooth = this.state.tollBooth;
@@ -94,6 +126,13 @@ export class TollBoothOperatorPage extends React.Component {
         let routePrice = this.state.routePrice;
         routePrice[field] = event.target.value;
         return this.setState({routePrice});
+    }
+
+    updateMultiplierState(event) {
+        const field = event.target.name;
+        let multiplierStruct = this.state.multiplierStruct;
+        multiplierStruct[field] = event.target.value;
+        return this.setState({multiplierStruct});
     }
 
     render() {
@@ -110,6 +149,9 @@ export class TollBoothOperatorPage extends React.Component {
                         </li>
                         <li>
                             <a href="#2" data-toggle="tab">Add base route prices</a>
+                        </li>
+                        <li>
+                            <a href="#3" data-toggle="tab">Set multipliers</a>
                         </li>
                     </ul>
 
@@ -168,6 +210,34 @@ export class TollBoothOperatorPage extends React.Component {
                                 <button
                                     className="btn btn-primary"
                                     onClick={this.setRoutePrice}>Set Route Price</button>
+                            </div>
+                        </div>
+                        <div className="tab-pane" id="3">
+                            <br/>
+                            <div>
+                                <TextInput
+                                    name="vehicleType"
+                                    label="Vehicle Type"
+                                    value={this.state.multiplierStruct.vehicleType}
+                                    onChange={this.updateMultiplierState}/>
+                                <TextInput
+                                    name="multiplier"
+                                    label="Multiplier"
+                                    value={this.state.multiplierStruct.multiplier}
+                                    onChange={this.updateMultiplierState}/>
+                                <TextInput
+                                    name="operatorOwner"
+                                    label="Toll Booth Operator owner address"
+                                    value={this.state.multiplierStruct.operatorOwner}
+                                    onChange={this.updateMultiplierState}/>
+                                <TextInput
+                                    name="operatorContract"
+                                    label="Toll Booth Operator contract address"
+                                    value={this.state.multiplierStruct.operatorContract}
+                                    onChange={this.updateMultiplierState}/>
+                                <button
+                                    className="btn btn-primary"
+                                    onClick={this.setMultiplier}>Set Multiplier</button>
                             </div>
                         </div>
                     </div>
