@@ -10,6 +10,9 @@ export class TollBoothOperatorPage extends React.Component {
         this.addTollBooth = this.addTollBooth.bind(this);
         this.updateTollBoothState = this.updateTollBoothState.bind(this);
 
+        this.setRoutePrice = this.setRoutePrice.bind(this);
+        this.updateRoutePriceState = this.updateRoutePriceState.bind(this);
+
         this.state = {
             tollBooth: {
                 address: "",
