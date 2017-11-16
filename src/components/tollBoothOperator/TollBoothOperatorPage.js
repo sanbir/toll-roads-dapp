@@ -7,6 +7,8 @@ export class TollBoothOperatorPage extends React.Component {
     constructor(props, context) {
         super(props, context);
 
+        this.updateOperatorState = this.updateOperatorState.bind(this);
+
         this.addTollBooth = this.addTollBooth.bind(this);
         this.updateTollBoothState = this.updateTollBoothState.bind(this);
 
@@ -17,23 +19,21 @@ export class TollBoothOperatorPage extends React.Component {
         this.updateMultiplierState = this.updateMultiplierState.bind(this);
 
         this.state = {
+            operator: {
+                owner: "",
+                contract: ""
+            },
             tollBooth: {
-                address: "",
-                operatorOwner: "",
-                operatorContract: ""
+                address: ""
             },
             routePrice: {
                 entryBooth: "",
                 exitBooth: "",
-                priceWeis: "",
-                operatorOwner: "",
-                operatorContract: ""
+                priceWeis: ""
             },
             multiplierStruct: {
                 vehicleType: "",
-                multiplier: "",
-                operatorOwner: "",
-                operatorContract: ""
+                multiplier: ""
             }
         };
 
@@ -55,9 +55,9 @@ export class TollBoothOperatorPage extends React.Component {
         let tollBoothOperatorInstance;
 
         this.web3.eth.getAccounts((error, accounts) => {
-            tollBoothOperator.at(this.state.tollBooth.operatorContract).then((instance) => {
+            tollBoothOperator.at(this.state.operator.contract).then((instance) => {
                 tollBoothOperatorInstance = instance;
-                return tollBoothOperatorInstance.addTollBooth(this.state.tollBooth.address, {from: this.state.tollBooth.operatorOwner});
+                return tollBoothOperatorInstance.addTollBooth(this.state.tollBooth.address, {from: this.state.operator.owner});
             })
             .then(tx => {
                 const log = tx.logs[0];
@@ -75,13 +75,13 @@ export class TollBoothOperatorPage extends React.Component {
         let tollBoothOperatorInstance;
 
         this.web3.eth.getAccounts((error, accounts) => {
-            tollBoothOperator.at(this.state.routePrice.operatorContract).then((instance) => {
+            tollBoothOperator.at(this.state.operator.contract).then((instance) => {
                 tollBoothOperatorInstance = instance;
                 return tollBoothOperatorInstance.setRoutePrice(
                     this.state.routePrice.entryBooth,
                     this.state.routePrice.exitBooth,
                     this.state.routePrice.priceWeis,
-                    {from: this.state.routePrice.operatorOwner});
+                    {from: this.state.operator.owner});
             })
             .then(tx => {
                 const log = tx.logs[0];
@@ -99,12 +99,12 @@ export class TollBoothOperatorPage extends React.Component {
         let tollBoothOperatorInstance;
 
         this.web3.eth.getAccounts((error, accounts) => {
-            tollBoothOperator.at(this.state.multiplierStruct.operatorContract).then((instance) => {
+            tollBoothOperator.at(this.state.operator.contract).then((instance) => {
                 tollBoothOperatorInstance = instance;
                 return tollBoothOperatorInstance.setMultiplier(
                     this.state.multiplierStruct.vehicleType,
                     this.state.multiplierStruct.multiplier,
-                    {from: this.state.multiplierStruct.operatorOwner});
+                    {from: this.state.operator.owner});
             })
             .then(tx => {
                 const log = tx.logs[0];
@@ -135,12 +135,32 @@ export class TollBoothOperatorPage extends React.Component {
         return this.setState({multiplierStruct});
     }
 
+    updateOperatorState(event) {
+        const field = event.target.name;
+        let operator = this.state.operator;
+        operator[field] = event.target.value;
+        return this.setState({operator});
+    }
+
     render() {
         return (
             <div>
                 <h1>Toll Booth Operator</h1>
 
                 <hr></hr>
+
+                <div className="container">
+                    <TextInput
+                        name="owner"
+                        label="Toll Booth Operator owner address"
+                        value={this.state.operator.owner}
+                        onChange={this.updateOperatorState}/>
+                    <TextInput
+                        name="contract"
+                        label="Toll Booth Operator contract address"
+                        value={this.state.operator.contract}
+                        onChange={this.updateOperatorState}/>
+                </div>
 
                 <div className="container">
                     <ul className="nav nav-tabs">
@@ -163,16 +183,6 @@ export class TollBoothOperatorPage extends React.Component {
                                     name="address"
                                     label="Toll Booth address"
                                     value={this.state.tollBooth.address}
-                                    onChange={this.updateTollBoothState}/>
-                                <TextInput
-                                    name="operatorOwner"
-                                    label="Toll Booth Operator owner address"
-                                    value={this.state.tollBooth.operatorOwner}
-                                    onChange={this.updateTollBoothState}/>
-                                <TextInput
-                                    name="operatorContract"
-                                    label="Toll Booth Operator contract address"
-                                    value={this.state.tollBooth.operatorContract}
                                     onChange={this.updateTollBoothState}/>
                                 <button
                                     className="btn btn-primary"
@@ -197,16 +207,6 @@ export class TollBoothOperatorPage extends React.Component {
                                     label="Price (in Weis)"
                                     value={this.state.routePrice.priceWeis}
                                     onChange={this.updateRoutePriceState}/>
-                                <TextInput
-                                    name="operatorOwner"
-                                    label="Toll Booth Operator owner address"
-                                    value={this.state.routePrice.operatorOwner}
-                                    onChange={this.updateRoutePriceState}/>
-                                <TextInput
-                                    name="operatorContract"
-                                    label="Toll Booth Operator contract address"
-                                    value={this.state.routePrice.operatorContract}
-                                    onChange={this.updateRoutePriceState}/>
                                 <button
                                     className="btn btn-primary"
                                     onClick={this.setRoutePrice}>Set Route Price</button>
@@ -224,16 +224,6 @@ export class TollBoothOperatorPage extends React.Component {
                                     name="multiplier"
                                     label="Multiplier"
                                     value={this.state.multiplierStruct.multiplier}
-                                    onChange={this.updateMultiplierState}/>
-                                <TextInput
-                                    name="operatorOwner"
-                                    label="Toll Booth Operator owner address"
-                                    value={this.state.multiplierStruct.operatorOwner}
-                                    onChange={this.updateMultiplierState}/>
-                                <TextInput
-                                    name="operatorContract"
-                                    label="Toll Booth Operator contract address"
-                                    value={this.state.multiplierStruct.operatorContract}
                                     onChange={this.updateMultiplierState}/>
                                 <button
                                     className="btn btn-primary"
