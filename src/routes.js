@@ -4,6 +4,7 @@ import App from './components/App';
 
 import RegulatorPage from './components/regulator/RegulatorPage';
 import TollBoothOperatorPage from './components/tollBoothOperator/TollBoothOperatorPage'; //eslint-disable-line import/no-named-as-default
+import IndividualVehiclePage from './components/individualVehicle/IndividualVehiclePage';
 
 
 export default (
@@ -11,5 +12,6 @@ export default (
         <IndexRoute component={RegulatorPage} />
         <Route path="regulator" component={RegulatorPage} />
         <Route path="tollBoothOperator" component={TollBoothOperatorPage} />
+        <Route path="individualVehicle" component={IndividualVehiclePage} />
     </Route>
 );
