@@ -14,6 +14,11 @@ export class IndividualVehiclePage extends React.Component {
             vehicle: {
                 address: "",
                 balance: ""
+            },
+            enterRoad: {
+                entryBooth: "",
+                secret: "",
+                tollBoothOperatorContractAddress: ""
             }
         };
 
@@ -27,7 +32,7 @@ export class IndividualVehiclePage extends React.Component {
 
     }
 
-    addTollBooth() {
+    enterRoad() {
         const contract = require('truffle-contract');
         const tollBoothOperator = contract(TollBoothOperatorContract);
         tollBoothOperator.setProvider(this.web3.currentProvider);
@@ -35,15 +40,19 @@ export class IndividualVehiclePage extends React.Component {
         let tollBoothOperatorInstance;
 
         this.web3.eth.getAccounts((error, accounts) => {
-            tollBoothOperator.at(this.state.operator.contract).then((instance) => {
+            tollBoothOperator.at(this.state.enterRoad.tollBoothOperatorContractAddress).then((instance) => {
                 tollBoothOperatorInstance = instance;
-                return tollBoothOperatorInstance.addTollBooth(this.state.tollBooth.address, {from: this.state.operator.owner});
+                return tollBoothOperatorInstance.hashSecret(this.state.enterRoad.secret);
             })
-                .then(tx => {
-                    const log = tx.logs[0];
-                    return JSON.stringify(log.args);
-                })
-                .then(alert);
+            .then(exitSecretHashed => {
+                console.log("exitSecretHashed", exitSecretHashed);
+                return tollBoothOperatorInstance.enterRoad(this.state.enterRoad.entryBooth, exitSecretHashed, {from: this.state.vehicle.address});
+            })
+            .then(tx => {
+                const log = tx.logs[0];
+                return JSON.stringify(log.args);
+            })
+            .then(alert);
         })
     }
 
@@ -52,6 +61,13 @@ export class IndividualVehiclePage extends React.Component {
         let vehicle = this.state.vehicle;
         vehicle[field] = event.target.value;
         return this.setState({vehicle});
+    }
+
+    updateEnterRoadState(event) {
+        const field = event.target.name;
+        let enterRoad = this.state.enterRoad;
+        enterRoad[field] = event.target.value;
+        return this.setState({enterRoad});
     }
 
     getBalance() {
@@ -85,33 +101,40 @@ export class IndividualVehiclePage extends React.Component {
                     <label>Basic Ether balance: {this.state.vehicle.balance}</label>
                 </div>
 
-                {/*<div className="container">*/}
-                    {/*<ul className="nav nav-tabs">*/}
-                        {/*<li className="active">*/}
-                            {/*<a  href="#1" data-toggle="tab">Get basic Ether balance</a>*/}
-                        {/*</li>*/}
-                        {/*<li>*/}
-                            {/*<a href="#2" data-toggle="tab">Make an entry deposit</a>*/}
-                        {/*</li>*/}
-                        {/*<li>*/}
-                            {/*<a href="#3" data-toggle="tab">History of entry / exit</a>*/}
-                        {/*</li>*/}
-                    {/*</ul>*/}
+                <div className="container">
+                    <ul className="nav nav-tabs">
+                        <li>
+                            <a href="#1" data-toggle="tab">Make an entry deposit</a>
+                        </li>
+                        <li>
+                            <a href="#2" data-toggle="tab">History of entry / exit</a>
+                        </li>
+                    </ul>
 
-                    {/*<div className="tab-content ">*/}
-                        {/*<div className="tab-pane active" id="1">*/}
-                            {/*<br/>*/}
-                            {/*<div>*/}
-                                {/*<TextInput*/}
-                                    {/*name="address"*/}
-                                    {/*label="Toll Booth address"*/}
-                                    {/*value={this.state.tollBooth.address}*/}
-                                    {/*onChange={this.updateTollBoothState}/>*/}
-                                {/*<button*/}
-                                    {/*className="btn btn-primary"*/}
-                                    {/*onClick={this.addTollBooth}>Add a Toll Booth</button>*/}
-                            {/*</div>*/}
-                        {/*</div>*/}
+                    <div className="tab-content ">
+                        <div className="tab-pane active" id="1">
+                            <br/>
+                            <div>
+                                <TextInput
+                                    name="entryBooth"
+                                    label="Entry Booth"
+                                    value={this.state.enterRoad.entryBooth}
+                                    onChange={this.updateEnterRoadState}/>
+                                <TextInput
+                                    name="secret"
+                                    label="Secret"
+                                    value={this.state.enterRoad.secret}
+                                    onChange={this.updateEnterRoadState}/>
+                                <TextInput
+                                    name="tollBoothOperatorContractAddress"
+                                    label="Toll Booth Operator contract address"
+                                    value={this.state.enterRoad.tollBoothOperatorContractAddress}
+                                    onChange={this.updateEnterRoadState}/>
+                                <button
+                                    className="btn btn-primary"
+                                    onClick={this.enterRoad}>Enter Road</button>
+                            </div>
+                        </div>
                         {/*<div className="tab-pane" id="2">*/}
                             {/*<br/>*/}
                             {/*<div>*/}
@@ -135,26 +158,8 @@ export class IndividualVehiclePage extends React.Component {
                                     {/*onClick={this.setRoutePrice}>Set Route Price</button>*/}
                             {/*</div>*/}
                         {/*</div>*/}
-                        {/*<div className="tab-pane" id="3">*/}
-                            {/*<br/>*/}
-                            {/*<div>*/}
-                                {/*<TextInput*/}
-                                    {/*name="vehicleType"*/}
-                                    {/*label="Vehicle Type"*/}
-                                    {/*value={this.state.multiplierStruct.vehicleType}*/}
-                                    {/*onChange={this.updateMultiplierState}/>*/}
-                                {/*<TextInput*/}
-                                    {/*name="multiplier"*/}
-                                    {/*label="Multiplier"*/}
-                                    {/*value={this.state.multiplierStruct.multiplier}*/}
-                                    {/*onChange={this.updateMultiplierState}/>*/}
-                                {/*<button*/}
-                                    {/*className="btn btn-primary"*/}
-                                    {/*onClick={this.setMultiplier}>Set Multiplier</button>*/}
-                            {/*</div>*/}
-                        {/*</div>*/}
-                    {/*</div>*/}
-                {/*</div>*/}
+                    </div>
+                </div>
 
                 <hr></hr>
 
