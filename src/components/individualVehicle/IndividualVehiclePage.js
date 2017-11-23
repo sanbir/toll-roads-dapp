@@ -9,6 +9,8 @@ export class IndividualVehiclePage extends React.Component {
 
         this.getBalance = this.getBalance.bind(this);
         this.updateVehicleState = this.updateVehicleState.bind(this);
+        this.enterRoad = this.enterRoad.bind(this);
+        this.updateEnterRoadState = this.updateEnterRoadState.bind(this);
 
         this.state = {
             vehicle: {
@@ -18,7 +20,8 @@ export class IndividualVehiclePage extends React.Component {
             enterRoad: {
                 entryBooth: "",
                 secret: "",
-                tollBoothOperatorContractAddress: ""
+                tollBoothOperatorContractAddress: "",
+                depositedWeis: ""
             }
         };
 
@@ -45,8 +48,12 @@ export class IndividualVehiclePage extends React.Component {
                 return tollBoothOperatorInstance.hashSecret(this.state.enterRoad.secret);
             })
             .then(exitSecretHashed => {
-                console.log("exitSecretHashed", exitSecretHashed);
-                return tollBoothOperatorInstance.enterRoad(this.state.enterRoad.entryBooth, exitSecretHashed, {from: this.state.vehicle.address});
+                let depositedWeis = parseInt(this.web3.toWei(this.state.enterRoad.depositedWeis, "ether"));
+                
+                return tollBoothOperatorInstance.enterRoad(this.state.enterRoad.entryBooth, exitSecretHashed, {
+                    from: this.state.vehicle.address,
+                    value: depositedWeis,
+                    gas: 3600000});
             })
             .then(tx => {
                 const log = tx.logs[0];
@@ -103,7 +110,7 @@ export class IndividualVehiclePage extends React.Component {
 
                 <div className="container">
                     <ul className="nav nav-tabs">
-                        <li>
+                        <li className="active">
                             <a href="#1" data-toggle="tab">Make an entry deposit</a>
                         </li>
                         <li>
@@ -129,6 +136,11 @@ export class IndividualVehiclePage extends React.Component {
                                     name="tollBoothOperatorContractAddress"
                                     label="Toll Booth Operator contract address"
                                     value={this.state.enterRoad.tollBoothOperatorContractAddress}
+                                    onChange={this.updateEnterRoadState}/>
+                                <TextInput
+                                    name="depositedWeis"
+                                    label="Ether to deposit"
+                                    value={this.state.enterRoad.depositedWeis}
                                     onChange={this.updateEnterRoadState}/>
                                 <button
                                     className="btn btn-primary"

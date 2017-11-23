@@ -1,6 +1,7 @@
 import React, {PropTypes} from 'react';
 import TextInput from '../common/TextInput';
 import RegulatorContract from '../../../build/contracts/Regulator.json';
+import TollBoothOperatorContract from '../../../build/contracts/TollBoothOperator.json';
 import getWeb3 from '../../utils/getWeb3'
 
 export class RegulatorPage extends React.Component {
@@ -63,7 +64,8 @@ export class RegulatorPage extends React.Component {
         const contract = require('truffle-contract');
         const regulator = contract(RegulatorContract);
         regulator.setProvider(this.web3.currentProvider);
-
+        const operator = contract(TollBoothOperatorContract);
+        operator.setProvider(this.web3.currentProvider);
 
         let regulatorInstance;
 
@@ -77,7 +79,9 @@ export class RegulatorPage extends React.Component {
             .then(tx => {
                 this.state.operator.deployedContractAddresses.push(tx.logs[1].args.newOperator);
                 this.setState(this.state.operator.deployedContractAddresses);
-            });
+                return operator.at(tx.logs[1].args.newOperator);
+            })
+            .then(tollBoothOperatorInstance => tollBoothOperatorInstance.setPaused(false, {from: this.state.operator.owner}));
         })
     }
 
