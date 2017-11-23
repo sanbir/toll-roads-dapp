@@ -99,10 +99,16 @@ export class IndividualVehiclePage extends React.Component {
             .then(instance => {
                 tollBoothOperatorInstance = instance;
 
-                let logRoadEnteredEvent = tollBoothOperatorInstance.LogRoadEntered({}, {fromBlock: 0, toBlock: 'latest'});
+                let logRoadEnteredEvent = tollBoothOperatorInstance.LogRoadEntered({vehicle: this.state.vehicle.address}, {fromBlock: 0, toBlock: 'latest'});
+
                 logRoadEnteredEvent.get((error, logs) => {
-                    logs.forEach(log => console.log(log.args))
+                    logs.forEach(log => console.log(log.args));
                 });
+
+                // let logRoadExitedEvent = tollBoothOperatorInstance.LogRoadExited({}, {fromBlock: 0, toBlock: 'latest'});
+                // logRoadExitedEvent.get((error, logs) => {
+                //     logs.forEach(log => console.log(log.args));
+                // });
 
                 return tollBoothOperatorInstance.hashSecret(this.state.enterRoad.secret);
             })
