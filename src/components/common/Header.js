@@ -9,6 +9,8 @@ const Header = () => {
         <Link to="/tollBoothOperator" activeClassName="active">Toll Booth Operator</Link>
         {" | "}
         <Link to="/individualVehicle" activeClassName="active">Individual Vehicle</Link>
+        {" | "}
+        <Link to="/individualTollBooth" activeClassName="active">Individual Toll Booth</Link>
     </nav>
   );
 };
