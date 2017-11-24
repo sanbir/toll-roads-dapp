@@ -93,26 +93,54 @@ export class IndividualVehiclePage extends React.Component {
     }
 
     showHistory() {
-        let tollBoothOperatorInstance;
-
+        this.state.historyEntries = [];
+        
         this.tollBoothOperator.at(this.state.tollBoothOperatorContractAddress)
-            .then(instance => {
-                tollBoothOperatorInstance = instance;
+            .then(tollBoothOperatorInstance => {
 
                 let logRoadEnteredEvent = tollBoothOperatorInstance.LogRoadEntered({vehicle: this.state.vehicle.address}, {fromBlock: 0, toBlock: 'latest'});
 
                 logRoadEnteredEvent.get((error, logs) => {
-                    logs.forEach(log => console.log(log.args));
+                    logs.forEach(log => {
+                        console.log(log.args);
+
+                        let exitSecretHashed = log.args.exitSecretHashed;
+
+                        let historyEntry = {
+                            entryBooth: log.args.entryBooth,
+                            exitBooth: "",
+                            depositedWeis: log.args.depositedWeis,
+                            finalFee: "",
+                            refundWeis: ""
+                        };
+
+                        let logRoadExitedEvent = tollBoothOperatorInstance.LogRoadExited({exitSecretHashed: exitSecretHashed}, {fromBlock: 0, toBlock: 'latest'});
+
+                        logRoadExitedEvent.get((error, logs) => {
+                            if (logs.length) {
+                                historyEntry.exitBooth = logs[0].args.exitBooth;
+                                historyEntry.finalFee = logs[0].args.finalFee;
+                                historyEntry.refundWeis = logs[0].args.refundWeis;
+
+                                this.state.historyEntries.push(historyEntry);
+                                this.setState(this.state.historyEntries);
+                            } else {
+                                let logPendingPaymentEvent = tollBoothOperatorInstance.LogPendingPayment({exitSecretHashed: exitSecretHashed}, {fromBlock: 0, toBlock: 'latest'});
+
+                                logPendingPaymentEvent.get((error, logs) => {
+                                    if (logs.length) {
+                                        historyEntry.exitBooth = logs[0].args.exitBooth;
+                                    }
+
+                                    this.state.historyEntries.push(historyEntry);
+                                    this.setState(this.state.historyEntries);
+                                });
+                            }
+                        });
+
+                    });
+
                 });
-
-                // let logRoadExitedEvent = tollBoothOperatorInstance.LogRoadExited({}, {fromBlock: 0, toBlock: 'latest'});
-                // logRoadExitedEvent.get((error, logs) => {
-                //     logs.forEach(log => console.log(log.args));
-                // });
-
-                return tollBoothOperatorInstance.hashSecret(this.state.enterRoad.secret);
-            })
-            .then(exitSecretHashed => {
 
             });
     }
@@ -187,26 +215,30 @@ export class IndividualVehiclePage extends React.Component {
                                     onClick={this.showHistory}>Show history</button>
 
                                 <br/>
-                                {/*<table style={{display: this.state.historyEntries.length ? '' : 'none'}}>*/}
-                                    {/*<tr>*/}
-                                        {/*<th>Entry Booth</th>*/}
-                                        {/*<th>Exit Booth</th>*/}
-                                        {/*<th>Deposit</th>*/}
-                                        {/*<th>Final Fee</th>*/}
-                                        {/*<th>Refund</th>*/}
-                                    {/*</tr>*/}
+                                <table className={"table"} style={{display: this.state.historyEntries.length ? '' : 'none'}}>
+                                    <thead>
+                                        <tr>
+                                            <th>Entry Booth</th>
+                                            <th>Exit Booth</th>
+                                            <th>Deposit (Ether)</th>
+                                            <th>Final Fee (Ether)</th>
+                                            <th>Refund (Ether)</th>
+                                        </tr>
+                                    </thead>
 
-                                    {/*{this.state.historyEntries.map(entry =>*/}
-                                        {/*<tr>*/}
-                                            {/*<td>{entry.entryBooth}</td>*/}
-                                            {/*<td>{entry.exitBooth}</td>*/}
-                                            {/*<td>{entry.depositedWeis}</td>*/}
-                                            {/*<td>{entry.finalFee}</td>*/}
-                                            {/*<td>{entry.refundWeis}</td>*/}
-                                        {/*</tr>*/}
-                                    {/*)}*/}
+                                    <tbody>
+                                        {this.state.historyEntries.map(entry =>
+                                            <tr>
+                                                <td>{entry.entryBooth}</td>
+                                                <td>{entry.exitBooth}</td>
+                                                <td>{entry.depositedWeis ? this.web3.fromWei(entry.depositedWeis, 'ether').toString() : ""}</td>
+                                                <td>{entry.finalFee ? this.web3.fromWei(entry.finalFee, 'ether').toString() : ""}</td>
+                                                <td>{entry.refundWeis ? this.web3.fromWei(entry.refundWeis, 'ether').toString() : ""}</td>
+                                            </tr>
+                                        )}
+                                    </tbody>
 
-                                {/*</table>*/}
+                                </table>
                             </div>
                         </div>
                     </div>
