@@ -13,7 +13,8 @@ export class IndividualTollBoothPage extends React.Component {
         this.state = {
             tollBoothOperatorContractAddress: "",
             tollBoothAddress: "",
-            exitSecretClear: ""
+            exitSecretClear: "",
+            status: ""
         };
 
         let self = this;
@@ -45,6 +46,12 @@ export class IndividualTollBoothPage extends React.Component {
             })
             .then(tx => {
                 const log = tx.logs[0];
+                this.state.status = log.event == "LogPendingPayment"
+                    ? "The payment is pending"
+                    : log.event == "LogRoadExited"
+                        ? "The refund has completed"
+                        : "An error has occurred";
+                this.setState(this.state);
                 return JSON.stringify(log.args);
             })
             .then(alert);
@@ -76,6 +83,8 @@ export class IndividualTollBoothPage extends React.Component {
                     <button
                         className="btn btn-primary"
                         onClick={this.reportExitRoad}>Report a vehicle exit</button>
+                    <br/>
+                    <label style={{display: this.state.status ? '' : 'none'}}>{this.state.status}</label>
                 </div>
 
 

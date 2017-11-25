@@ -81,7 +81,7 @@ export class TollBoothOperatorPage extends React.Component {
                     this.state.routePrice.entryBooth,
                     this.state.routePrice.exitBooth,
                     this.state.routePrice.priceWeis,
-                    {from: this.state.operator.owner});
+                    {from: this.state.operator.owner, gas: 3600000});
             })
             .then(tx => {
                 const log = tx.logs[0];
