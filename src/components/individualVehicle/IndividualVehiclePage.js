@@ -94,7 +94,7 @@ export class IndividualVehiclePage extends React.Component {
 
     showHistory() {
         this.state.historyEntries = [];
-        
+
         this.tollBoothOperator.at(this.state.tollBoothOperatorContractAddress)
             .then(tollBoothOperatorInstance => {
 
@@ -252,7 +252,6 @@ export class IndividualVehiclePage extends React.Component {
     }
 }
 
-//Pull in the React Router context so router is available on this.context.router.
 IndividualVehiclePage.contextTypes = {
     router: PropTypes.object
 };

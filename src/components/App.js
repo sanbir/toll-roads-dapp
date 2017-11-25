@@ -1,4 +1,3 @@
-// This component handles the App template used on every page.
 import React from 'react';
 import Header from './common/Header';
 

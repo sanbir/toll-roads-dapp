@@ -143,14 +143,14 @@ contract('TollBoothOperator', function(accounts) {
                     .then(result => assert.strictEqual(result.toNumber(), 1))
                     .then(() => operator.reportExitRoad(secret0, { from: booth1 }))
                     .then(tx => {
-                        assert.strictEqual(tx.receipt.logs.length, 1, "#1");
-                        assert.strictEqual(tx.logs.length, 1, "#2");
+                        assert.strictEqual(tx.receipt.logs.length, 1);
+                        assert.strictEqual(tx.logs.length, 1);
                         const logExited = tx.logs[0];
-                        assert.strictEqual(logExited.event, "LogRoadExited", "#3");
-                        assert.strictEqual(logExited.args.exitBooth, booth1, "#4");
-                        assert.strictEqual(logExited.args.exitSecretHashed, hashed0, "#5");
-                        assert.strictEqual(logExited.args.finalFee.toNumber(), deposit0 * multiplier0, "#6");
-                        assert.strictEqual(logExited.args.refundWeis.toNumber(), extraDeposit * multiplier0, "#7");
+                        assert.strictEqual(logExited.event, "LogRoadExited");
+                        assert.strictEqual(logExited.args.exitBooth, booth1);
+                        assert.strictEqual(logExited.args.exitSecretHashed, hashed0);
+                        assert.strictEqual(logExited.args.finalFee.toNumber(), deposit0 * multiplier0);
+                        assert.strictEqual(logExited.args.refundWeis.toNumber(), extraDeposit * multiplier0);
                         // console.log(tx.receipt.gasUsed);
                         return Promise.allNamed({
                             hashed0: () => operator.getVehicleEntry(hashed0),
@@ -159,11 +159,11 @@ contract('TollBoothOperator', function(accounts) {
                         });
                     })
                     .then(info => {
-                        assert.strictEqual(info.hashed0[0], vehicle0, "SHIT!!!");
-                        assert.strictEqual(info.hashed0[1], booth0, "#9");
-                        assert.strictEqual(info.hashed0[2].toNumber(), 0, "#10");
-                        assert.strictEqual(info.pendingCount01.toNumber(), 0, "#11");
-                        assert.strictEqual(info.pendingCount02.toNumber(), 0, "#12");
+                        assert.strictEqual(info.hashed0[0], vehicle0);
+                        assert.strictEqual(info.hashed0[1], booth0);
+                        assert.strictEqual(info.hashed0[2].toNumber(), 0);
+                        assert.strictEqual(info.pendingCount01.toNumber(), 0);
+                        assert.strictEqual(info.pendingCount02.toNumber(), 0);
                         return Promise.allNamed({
                             operator: () => web3.eth.getBalancePromise(operator.address),
                             collected: () => operator.getCollectedFeesAmount(),
@@ -171,11 +171,11 @@ contract('TollBoothOperator', function(accounts) {
                         });
                     })
                     .then(balances => {
-                        assert.strictEqual(balances.operator.toNumber(), deposit0 * multiplier0, "#13");
-                        assert.strictEqual(balances.collected.toNumber(), deposit0 * multiplier0, "#14");
+                        assert.strictEqual(balances.operator.toNumber(), deposit0 * multiplier0);
+                        assert.strictEqual(balances.collected.toNumber(), deposit0 * multiplier0);
                         assert.strictEqual(
                             balances.vehicle0.toString(10),
-                            vehicleInitBal.plus(extraDeposit * multiplier0).toString(10), "#15");
+                            vehicleInitBal.plus(extraDeposit * multiplier0).toString(10));
                     });
             });
 
@@ -240,25 +240,25 @@ contract('TollBoothOperator', function(accounts) {
 
             it("should be possible to set the base route price below both deposits and reduce count by 1", function() {
                 return operator.setRoutePrice.call(booth0, booth2, deposit0, { from: owner1 })
-                    .then(success => assert.isTrue(success), "#1")
+                    .then(success => assert.isTrue(success))
                     .then(() => operator.setRoutePrice(booth0, booth2, deposit0, { from: owner1 }))
                     .then(tx => {
-                        assert.strictEqual(tx.receipt.logs.length, 2, "#2");
-                        assert.strictEqual(tx.logs.length, 2, "#3");
+                        assert.strictEqual(tx.receipt.logs.length, 2);
+                        assert.strictEqual(tx.logs.length, 2);
                         const logPriceSet = tx.logs[0];
-                        assert.strictEqual(logPriceSet.event, "LogRoutePriceSet", "#4");
-                        assert.strictEqual(logPriceSet.args.sender, owner1, "#5");
-                        assert.strictEqual(logPriceSet.args.entryBooth, booth0, "#6");
-                        assert.strictEqual(logPriceSet.args.exitBooth, booth2, "#7");
-                        assert.strictEqual(logPriceSet.args.priceWeis.toNumber(), deposit0, "#8");
+                        assert.strictEqual(logPriceSet.event, "LogRoutePriceSet");
+                        assert.strictEqual(logPriceSet.args.sender, owner1);
+                        assert.strictEqual(logPriceSet.args.entryBooth, booth0);
+                        assert.strictEqual(logPriceSet.args.exitBooth, booth2);
+                        assert.strictEqual(logPriceSet.args.priceWeis.toNumber(), deposit0);
                         const logExited = tx.logs[1];
-                        assert.strictEqual(logExited.event, "LogRoadExited", "#9");
-                        assert.strictEqual(logExited.args.exitBooth, booth2, "#10");
-                        assert.strictEqual(logExited.args.exitSecretHashed, hashed1, "#11");
-                        assert.strictEqual(logExited.args.finalFee.toNumber(), deposit0 * multiplier1, "#12");
+                        assert.strictEqual(logExited.event, "LogRoadExited");
+                        assert.strictEqual(logExited.args.exitBooth, booth2);
+                        assert.strictEqual(logExited.args.exitSecretHashed, hashed1);
+                        assert.strictEqual(logExited.args.finalFee.toNumber(), deposit0 * multiplier1);
                         assert.strictEqual(
                             logExited.args.refundWeis.toNumber(),
-                            (extraDeposit1 - deposit0) * multiplier1, "#13");
+                            (extraDeposit1 - deposit0) * multiplier1);
                         // console.log(tx.receipt.gasUsed);
                         return Promise.allNamed({
                             hashed0: () => operator.getVehicleEntry(hashed0),
@@ -268,14 +268,14 @@ contract('TollBoothOperator', function(accounts) {
                         });
                     })
                     .then(info => {
-                        assert.strictEqual(info.hashed0[0], vehicle0, "#14");
-                        assert.strictEqual(info.hashed0[1], booth0, "#15");
-                        assert.strictEqual(info.hashed0[2].toNumber(), extraDeposit0 * multiplier0, "#16");
-                        assert.strictEqual(info.hashed1[0], vehicle1, "#17");
-                        assert.strictEqual(info.hashed1[1], booth0, "#18");
-                        assert.strictEqual(info.hashed1[2].toNumber(), 0, "#19");
-                        assert.strictEqual(info.pendingCount01.toNumber(), 0, "#20");
-                        assert.strictEqual(info.pendingCount02.toNumber(), 1, "#21");
+                        assert.strictEqual(info.hashed0[0], vehicle0);
+                        assert.strictEqual(info.hashed0[1], booth0);
+                        assert.strictEqual(info.hashed0[2].toNumber(), extraDeposit0 * multiplier0);
+                        assert.strictEqual(info.hashed1[0], vehicle1);
+                        assert.strictEqual(info.hashed1[1], booth0);
+                        assert.strictEqual(info.hashed1[2].toNumber(), 0);
+                        assert.strictEqual(info.pendingCount01.toNumber(), 0);
+                        assert.strictEqual(info.pendingCount02.toNumber(), 1);
                         return Promise.allNamed({
                             operator: () => web3.eth.getBalancePromise(operator.address),
                             collected: () => operator.getCollectedFeesAmount(),
@@ -286,12 +286,12 @@ contract('TollBoothOperator', function(accounts) {
                     .then(balances => {
                         assert.strictEqual(
                             balances.operator.toNumber(),
-                            extraDeposit0 * multiplier0 + deposit0 * multiplier1, "#22");
-                        assert.strictEqual(balances.collected.toNumber(), deposit0 * multiplier1, "#23");
-                        assert.strictEqual(balances.vehicle0.toString(10), vehicle0InitBal.toString(10), "#24");
+                            extraDeposit0 * multiplier0 + deposit0 * multiplier1);
+                        assert.strictEqual(balances.collected.toNumber(), deposit0 * multiplier1);
+                        assert.strictEqual(balances.vehicle0.toString(10), vehicle0InitBal.toString(10));
                         assert.strictEqual(
                             balances.vehicle1.toString(10),
-                            vehicle1InitBal.plus((extraDeposit1 - deposit0) * multiplier1).toString(10), "#25");
+                            vehicle1InitBal.plus((extraDeposit1 - deposit0) * multiplier1).toString(10));
                     });
             });
 

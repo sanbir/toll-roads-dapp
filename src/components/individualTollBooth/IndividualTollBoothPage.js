@@ -95,7 +95,6 @@ export class IndividualTollBoothPage extends React.Component {
     }
 }
 
-//Pull in the React Router context so router is available on this.context.router.
 IndividualTollBoothPage.contextTypes = {
     router: PropTypes.object
 };

@@ -241,7 +241,6 @@ export class TollBoothOperatorPage extends React.Component {
     }
 }
 
-//Pull in the React Router context so router is available on this.context.router.
 TollBoothOperatorPage.contextTypes = {
     router: PropTypes.object
 };

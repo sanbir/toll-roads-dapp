@@ -176,7 +176,6 @@ export class RegulatorPage extends React.Component {
     }
 }
 
-//Pull in the React Router context so router is available on this.context.router.
 RegulatorPage.contextTypes = {
     router: PropTypes.object
 };
